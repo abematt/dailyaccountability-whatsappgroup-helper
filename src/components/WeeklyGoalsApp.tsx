@@ -39,6 +39,7 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
   const [showHistory, setShowHistory] = React.useState(false);
   const [editingIndex, setEditingIndex] = React.useState<number | null>(null);
   const [editingText, setEditingText] = React.useState("");
+  const hasNewItemText = newItemText.trim().length > 0;
 
   // Initialize week if it doesn't exist
   React.useEffect(() => {
@@ -240,13 +241,20 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
                 {/* Add Item Input */}
                 <div className="flex items-center gap-2.5">
                   <Input
-                    placeholder="Add a new goal..."
+                    placeholder="Type your goal here..."
                     value={newItemText}
                     onChange={(e) => setNewItemText(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && hasNewItemText && handleAddItem()
+                    }
                     className="h-11 rounded-2xl border-border/75 bg-background/75 text-base"
                   />
-                  <Button onClick={handleAddItem} size="icon" className="h-11 w-11 shrink-0 rounded-2xl shadow-sm">
+                  <Button
+                    onClick={handleAddItem}
+                    disabled={!hasNewItemText}
+                    size="icon"
+                    className="h-11 w-11 shrink-0 rounded-2xl shadow-sm"
+                  >
                     <IconPlus className="h-5 w-5" />
                   </Button>
                 </div>

@@ -80,6 +80,7 @@ export function AccountabilityApp() {
   const [currentSection, setCurrentSection] = React.useState<SectionType>(null);
   const [editingIndex, setEditingIndex] = React.useState<number | null>(null);
   const [editingText, setEditingText] = React.useState("");
+  const hasNewItemText = newItemText.trim().length > 0;
 
   const handleSelectUser = (selectedUserId: UserId) => {
     localStorage.setItem("userId", selectedUserId);
@@ -439,10 +440,12 @@ export function AccountabilityApp() {
                 <div className="px-0 py-1 sm:px-3.5 sm:py-2.5">
                   <div className="flex items-center gap-2.5">
                     <Input
-                      placeholder="Add goal"
+                      placeholder="Type your goal here..."
                       value={newItemText}
                       onChange={(e) => setNewItemText(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && hasNewItemText && handleAddItem()
+                      }
                       className="h-11 flex-1 rounded-lg border-border/75 bg-background/75 text-base"
                     />
                     <Select
@@ -500,6 +503,7 @@ export function AccountabilityApp() {
                     </Select>
                     <Button
                       onClick={handleAddItem}
+                      disabled={!hasNewItemText}
                       size="icon"
                       className="h-11 w-11 shrink-0 rounded-2xl shadow-sm"
                     >
