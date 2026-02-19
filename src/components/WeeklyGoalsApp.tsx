@@ -5,89 +5,94 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { IconPlus, IconTrash, IconCheck, IconCopy, IconHistory, IconPencil, IconX, IconCalendarWeek } from "@tabler/icons-react";
+import { IconPlus, IconTrash, IconCheck, IconCopy, IconHistory, IconPencil, IconX, IconArrowLeft } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { HistoryView } from "./HistoryView";
-import { WeeklyGoalsApp } from "./WeeklyGoalsApp";
-import { UserPicker, type UserId } from "./UserPicker";
+import { WeeklyHistoryView } from "./WeeklyHistoryView";
 import { UserAvatar } from "./UserAvatar";
+import type { UserId } from "./UserPicker";
 
 type EmojiType = "green" | "yellow" | "red" | null;
-type SectionType = "personal" | "work" | null;
 
-interface ListItem {
+interface WeeklyItem {
   text: string;
   emoji: EmojiType;
   explanation?: string;
-  section?: "personal" | "work";
+  carriedOver?: boolean;
 }
 
-export function AccountabilityApp() {
-  const [userId, setUserId] = React.useState<UserId | null>(() => {
-    const stored = localStorage.getItem("userId");
-    return stored as UserId | null;
-  });
+interface WeeklyGoalsAppProps {
+  userId: UserId;
+  onBack: () => void;
+}
 
-  const todaysList = useQuery(api.dailyLists.getTodaysList, userId ? { userId } : "skip");
-  const daysSinceWeeklyUpdate = useQuery(api.weeklyGoals.getDaysSinceLastUpdate, userId ? { userId } : "skip");
-  const upsertList = useMutation(api.dailyLists.upsertTodaysList);
-  const markCompleted = useMutation(api.dailyLists.markTodaysListCompleted);
-  const revertToDraft = useMutation(api.dailyLists.revertTodaysListToDraft);
-  const updateEmojis = useMutation(api.dailyLists.updateItemsWithEmojis);
+export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
+  const weeklyGoals = useQuery(api.weeklyGoals.getCurrentWeekGoals, { userId });
+  const initializeWeek = useMutation(api.weeklyGoals.initializeCurrentWeek);
+  const upsertGoals = useMutation(api.weeklyGoals.upsertCurrentWeekGoals);
+  const markCompleted = useMutation(api.weeklyGoals.markCurrentWeekCompleted);
+  const revertToDraft = useMutation(api.weeklyGoals.revertCurrentWeekToDraft);
+  const updateEmojis = useMutation(api.weeklyGoals.updateWeekItemsWithEmojis);
 
-  const [items, setItems] = React.useState<ListItem[]>([]);
+  const [items, setItems] = React.useState<WeeklyItem[]>([]);
   const [newItemText, setNewItemText] = React.useState("");
   const [copied, setCopied] = React.useState(false);
   const [showHistory, setShowHistory] = React.useState(false);
-  const [showWeekly, setShowWeekly] = React.useState(false);
-  const [currentSection, setCurrentSection] = React.useState<SectionType>(null);
   const [editingIndex, setEditingIndex] = React.useState<number | null>(null);
   const [editingText, setEditingText] = React.useState("");
 
-  const handleSelectUser = (selectedUserId: UserId) => {
-    localStorage.setItem("userId", selectedUserId);
-    setUserId(selectedUserId);
-  };
-
-  // Load today's list when it's fetched
+  // Initialize week if it doesn't exist
   React.useEffect(() => {
-    if (todaysList?.items) {
-      setItems(todaysList.items);
+    if (weeklyGoals === null) {
+      initializeWeek({ userId });
     }
-  }, [todaysList]);
+  }, [weeklyGoals, initializeWeek, userId]);
 
-  const isCompleted = todaysList?.status === "completed";
-  const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  // Load weekly goals when fetched
+  React.useEffect(() => {
+    if (weeklyGoals?.items) {
+      setItems(weeklyGoals.items);
+    }
+  }, [weeklyGoals]);
+
+  const isCompleted = weeklyGoals?.status === "completed";
+
+  // Format week display
+  const formatWeekDisplay = () => {
+    if (!weeklyGoals) return "";
+
+    const startDate = new Date(weeklyGoals.weekStart + "T00:00:00");
+    const endDate = new Date(weeklyGoals.weekEnd + "T00:00:00");
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    const startDay = startDate.getDate();
+    const startMonth = monthNames[startDate.getMonth()];
+
+    const endDay = endDate.getDate();
+    const endMonth = monthNames[endDate.getMonth()];
+
+    return `Week ${weeklyGoals.weekNumber} - ${startDay} ${startMonth} - ${endDay} ${endMonth}`;
+  };
 
   const handleAddItem = () => {
     if (newItemText.trim() && userId) {
-      const newItem: ListItem = {
+      const newItem: WeeklyItem = {
         text: newItemText.trim(),
         emoji: null,
       };
 
-      if (currentSection) {
-        newItem.section = currentSection;
-      }
-
       const newItems = [...items, newItem];
       setItems(newItems);
       setNewItemText("");
-      upsertList({ userId, items: newItems, status: "draft" });
+      upsertGoals({ userId, items: newItems, status: "draft" });
     }
   };
 
   const handleRemoveItem = (index: number) => {
-    if (!userId) return;
     const newItems = items.filter((_, i) => i !== index);
     setItems(newItems);
-    upsertList({ userId, items: newItems, status: todaysList?.status || "draft" });
+    upsertGoals({ userId, items: newItems, status: weeklyGoals?.status || "draft" });
   };
 
   const handleEditItem = (index: number) => {
@@ -100,7 +105,7 @@ export function AccountabilityApp() {
       const newItems = [...items];
       newItems[index] = { ...newItems[index], text: editingText.trim() };
       setItems(newItems);
-      upsertList({ userId, items: newItems, status: todaysList?.status || "draft" });
+      upsertGoals({ userId, items: newItems, status: weeklyGoals?.status || "draft" });
     }
     setEditingIndex(null);
     setEditingText("");
@@ -112,17 +117,14 @@ export function AccountabilityApp() {
   };
 
   const handleMarkCompleted = async () => {
-    if (!userId) return;
     await markCompleted({ userId });
   };
 
   const handleRevertToDraft = async () => {
-    if (!userId) return;
     await revertToDraft({ userId });
   };
 
   const handleEmojiClick = (index: number, emoji: EmojiType) => {
-    if (!userId) return;
     const newItems = [...items];
     newItems[index] = { ...newItems[index], emoji };
 
@@ -142,7 +144,6 @@ export function AccountabilityApp() {
   };
 
   const handleSaveExplanation = () => {
-    if (!userId) return;
     updateEmojis({ userId, items });
   };
 
@@ -160,55 +161,20 @@ export function AccountabilityApp() {
   };
 
   const formatForWhatsApp = () => {
+    if (!weeklyGoals) return "";
+
     const suffix = isCompleted ? "Update" : "Goals";
-    const todayFormatted = new Date().toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
+    let formatted = `*${formatWeekDisplay()} - ${suffix}*\n\n`;
+
+    items.forEach((item, index) => {
+      const emoji = getEmojiDisplay(item.emoji);
+      const explanation = item.emoji === "yellow" && item.explanation
+        ? ` (${item.explanation})`
+        : "";
+      // Use emoji as prefix if completed, otherwise use numbering
+      const prefix = isCompleted && emoji ? emoji : `${index + 1}.`;
+      formatted += `${prefix} ${item.text}${explanation}\n`;
     });
-    let formatted = `*${todayFormatted} - ${suffix}*\n\n`;
-
-    // Group items by section
-    const personalItems = items.filter(item => item.section === "personal");
-    const workItems = items.filter(item => item.section === "work");
-    const noSectionItems = items.filter(item => !item.section);
-
-    // Helper function to format items with numbering or emoji prefix
-    const formatSection = (sectionItems: ListItem[], startNumber: number) => {
-      return sectionItems.map((item, idx) => {
-        const emoji = getEmojiDisplay(item.emoji);
-        const explanation = item.emoji === "yellow" && item.explanation
-          ? ` (${item.explanation})`
-          : "";
-        // Use emoji as prefix if completed, otherwise use numbering
-        const prefix = isCompleted && emoji ? emoji : `${startNumber + idx}.`;
-        return `${prefix} ${item.text}${explanation}`;
-      }).join("\n");
-    };
-
-    let currentNumber = 1;
-
-    // Add no-section items first
-    if (noSectionItems.length > 0) {
-      formatted += formatSection(noSectionItems, currentNumber);
-      formatted += "\n\n";
-      currentNumber += noSectionItems.length;
-    }
-
-    // Add Personal section
-    if (personalItems.length > 0) {
-      formatted += "*Personal*\n";
-      formatted += formatSection(personalItems, currentNumber);
-      formatted += "\n\n";
-      currentNumber += personalItems.length;
-    }
-
-    // Add Work section
-    if (workItems.length > 0) {
-      formatted += "*Work*\n";
-      formatted += formatSection(workItems, currentNumber);
-      formatted += "\n";
-    }
 
     return formatted.trim();
   };
@@ -220,20 +186,9 @@ export function AccountabilityApp() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Show user picker if no user is selected
-  if (!userId) {
-    return <UserPicker onSelectUser={handleSelectUser} />;
-  }
-
-  if (showWeekly) {
-    return <WeeklyGoalsApp userId={userId} onBack={() => setShowWeekly(false)} />;
-  }
-
   if (showHistory) {
-    return <HistoryView userId={userId} onBack={() => setShowHistory(false)} />;
+    return <WeeklyHistoryView userId={userId} onBack={() => setShowHistory(false)} />;
   }
-
-  const showWeeklyReminder = daysSinceWeeklyUpdate !== undefined && daysSinceWeeklyUpdate >= 7;
 
   return (
     <div className="flex flex-col h-screen bg-muted/30">
@@ -242,79 +197,38 @@ export function AccountabilityApp() {
       <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full min-h-0">
         {/* Header - Fixed */}
         <div className="p-4 bg-background border-b shrink-0">
+          <div className="flex items-center gap-3 mb-3">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={onBack}
+              className="h-8 w-8 shrink-0"
+            >
+              <IconArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-xl font-semibold tracking-tight">Weekly Goals</h1>
+          </div>
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-semibold tracking-tight">Daily Accountability</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">{today}</p>
+              <p className="text-sm text-muted-foreground">{formatWeekDisplay()}</p>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => setShowWeekly(true)}
-                className="h-9 w-9"
-                title="Weekly Goals"
-              >
-                <IconCalendarWeek className="h-5 w-5" />
-              </Button>
-              {todaysList?.status && (
-                <Badge variant={isCompleted ? "default" : "secondary"}>
-                  {isCompleted ? "Completed" : "Draft"}
-                </Badge>
-              )}
-            </div>
+            {weeklyGoals?.status && (
+              <Badge variant={isCompleted ? "default" : "secondary"} className="shrink-0">
+                {isCompleted ? "Completed" : "Draft"}
+              </Badge>
+            )}
           </div>
         </div>
 
         {/* Content Area - Scrollable */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
-          {/* 7-Day Reminder Banner */}
-          {showWeeklyReminder && (
-            <Card className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
-                      You haven't updated your weekly progress in {daysSinceWeeklyUpdate} days
-                    </p>
-                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-                      Keep your momentum going by reviewing your weekly goals
-                    </p>
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={() => setShowWeekly(true)}
-                    className="shrink-0 bg-amber-600 hover:bg-amber-700 text-white"
-                  >
-                    Update Now
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
           {/* Add Item Section - Only show in draft mode */}
           {!isCompleted && (
             <div className="space-y-2">
-              {/* Section Selector */}
-              <Select
-                value={currentSection || "none"}
-                onValueChange={(value) => setCurrentSection(value === "none" ? null : value as "personal" | "work")}
-              >
-                <SelectTrigger className="w-fit h-9 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No Section</SelectItem>
-                  <SelectItem value="personal">Personal</SelectItem>
-                  <SelectItem value="work">Work</SelectItem>
-                </SelectContent>
-              </Select>
-
               {/* Add Item Input */}
               <div className="flex gap-2">
                 <Input
-                  placeholder="Add a new item..."
+                  placeholder="Add a new goal..."
                   value={newItemText}
                   onChange={(e) => setNewItemText(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
@@ -331,7 +245,7 @@ export function AccountabilityApp() {
           {items.length === 0 ? (
             <div className="flex items-center justify-center py-12">
               <p className="text-center text-muted-foreground text-sm">
-                No items yet. Add your first item to get started!
+                No goals yet. Add your first goal to get started!
               </p>
             </div>
           ) : (
@@ -376,16 +290,12 @@ export function AccountabilityApp() {
                         ) : (
                           <div className="flex items-center gap-2 mb-1">
                             <p className="text-base leading-relaxed wrap-break-word">{item.text}</p>
-                            {item.section && (
+                            {item.carriedOver && (
                               <Badge
                                 variant="outline"
-                                className={`shrink-0 text-xs ${
-                                  item.section === "personal"
-                                    ? "border-blue-500 text-blue-700 dark:text-blue-400"
-                                    : "border-purple-500 text-purple-700 dark:text-purple-400"
-                                }`}
+                                className="shrink-0 text-xs border-amber-500 text-amber-700 dark:text-amber-400"
                               >
-                                {item.section === "personal" ? "Personal" : "Work"}
+                                Carried Over
                               </Badge>
                             )}
                           </div>
@@ -472,7 +382,7 @@ export function AccountabilityApp() {
           {!isCompleted && items.length > 0 && (
             <Button onClick={handleMarkCompleted} className="w-full h-12 text-base" size="lg">
               <IconCheck className="mr-2 h-5 w-5" />
-              Mark Day Completed
+              Mark Week Completed
             </Button>
           )}
 
@@ -505,7 +415,7 @@ export function AccountabilityApp() {
             size="lg"
           >
             <IconHistory className="mr-2 h-5 w-5" />
-            View Previous Days
+            View Previous Weeks
           </Button>
         </div>
       </div>

@@ -7,20 +7,20 @@ import { IconChevronLeft, IconCopy } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 import type { UserId } from "./UserPicker";
 
-interface HistoryViewProps {
+interface WeeklyHistoryViewProps {
   userId: UserId;
   onBack: () => void;
 }
 
-export function HistoryView({ userId, onBack }: HistoryViewProps) {
-  const allLists = useQuery(api.dailyLists.getAllLists, { userId });
-  const [selectedDate, setSelectedDate] = React.useState<string | null>(null);
+export function WeeklyHistoryView({ userId, onBack }: WeeklyHistoryViewProps) {
+  const allWeeks = useQuery(api.weeklyGoals.getAllWeeklyGoals, { userId });
+  const [selectedWeekStart, setSelectedWeekStart] = React.useState<string | null>(null);
   const [copied, setCopied] = React.useState(false);
 
-  const selectedList = React.useMemo(() => {
-    if (!selectedDate || !allLists) return null;
-    return allLists.find((list) => list.date === selectedDate);
-  }, [selectedDate, allLists]);
+  const selectedWeek = React.useMemo(() => {
+    if (!selectedWeekStart || !allWeeks) return null;
+    return allWeeks.find((week) => week.weekStart === selectedWeekStart);
+  }, [selectedWeekStart, allWeeks]);
 
   const getEmojiDisplay = (emoji: string | null) => {
     switch (emoji) {
@@ -35,19 +35,31 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
     }
   };
 
-  const formatForWhatsApp = (list: typeof selectedList) => {
-    if (!list) return "";
+  const formatWeekDisplay = (week: typeof selectedWeek) => {
+    if (!week) return "";
 
-    const date = new Date(list.date).toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-    });
+    const startDate = new Date(week.weekStart + "T00:00:00");
+    const endDate = new Date(week.weekEnd + "T00:00:00");
 
-    const suffix = list.status === "completed" ? "Update" : "Goals";
-    const isCompleted = list.status === "completed";
-    let formatted = `*${date} - ${suffix}*\n\n`;
-    list.items.forEach((item, index) => {
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    const startDay = startDate.getDate();
+    const startMonth = monthNames[startDate.getMonth()];
+
+    const endDay = endDate.getDate();
+    const endMonth = monthNames[endDate.getMonth()];
+
+    return `Week ${week.weekNumber} - ${startDay} ${startMonth} - ${endDay} ${endMonth}`;
+  };
+
+  const formatForWhatsApp = (week: typeof selectedWeek) => {
+    if (!week) return "";
+
+    const suffix = week.status === "completed" ? "Update" : "Goals";
+    const isCompleted = week.status === "completed";
+    let formatted = `*${formatWeekDisplay(week)} - ${suffix}*\n\n`;
+    week.items.forEach((item, index) => {
       const emoji = getEmojiDisplay(item.emoji);
       const explanation =
         item.emoji === "yellow" && item.explanation ? ` (${item.explanation})` : "";
@@ -59,26 +71,25 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
   };
 
   const handleCopy = async () => {
-    if (!selectedList) return;
-    const formatted = formatForWhatsApp(selectedList);
+    if (!selectedWeek) return;
+    const formatted = formatForWhatsApp(selectedWeek);
     await navigator.clipboard.writeText(formatted);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+  // Filter out current week from history
+  const getCurrentWeekStart = () => {
+    const now = new Date();
+    const day = now.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + diff);
+    return monday.toISOString().split("T")[0];
   };
 
-  // Filter out today's date from history
-  const today = new Date().toISOString().split("T")[0];
-  const historyLists = allLists?.filter((list) => list.date !== today) || [];
+  const currentWeekStart = getCurrentWeekStart();
+  const historyWeeks = allWeeks?.filter((week) => week.weekStart !== currentWeekStart) || [];
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/30">
@@ -87,7 +98,7 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
         <div className="p-4 bg-background border-b">
           <Button onClick={onBack} variant="ghost" size="sm" className="h-10 -ml-2">
             <IconChevronLeft className="mr-1 h-5 w-5" />
-            Back to Today
+            Back to Current Week
           </Button>
         </div>
 
@@ -95,36 +106,36 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
         <div className="flex-1 overflow-y-auto">
           {/* Mobile: Show either list or detail. Desktop: Show both side-by-side */}
           <div className="h-full md:grid md:grid-cols-2 md:divide-x">
-            {/* List of dates */}
-            <div className={`${selectedDate ? "hidden md:block" : "block"} h-full overflow-y-auto`}>
+            {/* List of weeks */}
+            <div className={`${selectedWeekStart ? "hidden md:block" : "block"} h-full overflow-y-auto`}>
               <div className="p-4">
                 <div className="mb-4">
-                  <h2 className="text-lg font-semibold">Previous Days</h2>
-                  <p className="text-sm text-muted-foreground mt-0.5">Select a date to view details</p>
+                  <h2 className="text-lg font-semibold">Previous Weeks</h2>
+                  <p className="text-sm text-muted-foreground mt-0.5">Select a week to view details</p>
                 </div>
 
-                {historyLists.length === 0 ? (
+                {historyWeeks.length === 0 ? (
                   <div className="flex items-center justify-center py-12">
                     <p className="text-center text-muted-foreground text-sm">No history yet</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {historyLists.map((list) => (
+                    {historyWeeks.map((week) => (
                       <button
-                        key={list._id}
-                        onClick={() => setSelectedDate(list.date)}
+                        key={week._id}
+                        onClick={() => setSelectedWeekStart(week.weekStart)}
                         className={`w-full flex items-center justify-between p-4 rounded-lg border transition-colors text-left ${
-                          selectedDate === list.date
+                          selectedWeekStart === week.weekStart
                             ? "bg-primary text-primary-foreground border-primary"
                             : "bg-background hover:bg-muted/50 border-border"
                         }`}
                       >
-                        <span className="text-base font-medium">{formatDate(list.date)}</span>
+                        <span className="text-base font-medium">{formatWeekDisplay(week)}</span>
                         <Badge
-                          variant={list.status === "completed" ? "default" : "secondary"}
-                          className={selectedDate === list.date ? "bg-primary-foreground text-primary" : ""}
+                          variant={week.status === "completed" ? "default" : "secondary"}
+                          className={selectedWeekStart === week.weekStart ? "bg-primary-foreground text-primary" : ""}
                         >
-                          {list.items.length}
+                          {week.items.length}
                         </Badge>
                       </button>
                     ))}
@@ -133,14 +144,14 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
               </div>
             </div>
 
-            {/* Selected date details */}
-            <div className={`${selectedDate ? "block" : "hidden md:flex md:items-center md:justify-center"} h-full overflow-y-auto`}>
-              {selectedDate && selectedList ? (
+            {/* Selected week details */}
+            <div className={`${selectedWeekStart ? "block" : "hidden md:flex md:items-center md:justify-center"} h-full overflow-y-auto`}>
+              {selectedWeekStart && selectedWeek ? (
                 <div className="p-4 space-y-4">
                   {/* Mobile back button and header */}
                   <div className="md:hidden">
                     <Button
-                      onClick={() => setSelectedDate(null)}
+                      onClick={() => setSelectedWeekStart(null)}
                       variant="ghost"
                       size="sm"
                       className="h-10 -ml-2 mb-4"
@@ -152,15 +163,15 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
 
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
-                      <h2 className="text-lg font-semibold">{formatDate(selectedList.date)}</h2>
+                      <h2 className="text-lg font-semibold">{formatWeekDisplay(selectedWeek)}</h2>
                     </div>
-                    <Badge variant={selectedList.status === "completed" ? "default" : "secondary"} className="shrink-0">
-                      {selectedList.status === "completed" ? "Completed" : "Draft"}
+                    <Badge variant={selectedWeek.status === "completed" ? "default" : "secondary"} className="shrink-0">
+                      {selectedWeek.status === "completed" ? "Completed" : "Draft"}
                     </Badge>
                   </div>
 
                   <div className="space-y-3">
-                    {selectedList.items.map((item, index) => (
+                    {selectedWeek.items.map((item, index) => (
                       <Card key={index}>
                         <CardContent className="p-4">
                           <div className="flex items-start gap-3">
@@ -168,7 +179,17 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
                               {index + 1}.
                             </span>
                             <div className="flex-1 min-w-0">
-                              <p className="text-base leading-relaxed wrap-break-word">{item.text}</p>
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className="text-base leading-relaxed wrap-break-word">{item.text}</p>
+                                {item.carriedOver && (
+                                  <Badge
+                                    variant="outline"
+                                    className="shrink-0 text-xs border-amber-500 text-amber-700 dark:text-amber-400"
+                                  >
+                                    Carried Over
+                                  </Badge>
+                                )}
+                              </div>
                               {item.emoji && (
                                 <div className="flex items-start gap-2 mt-3">
                                   <span className="text-2xl leading-none">{getEmojiDisplay(item.emoji)}</span>
@@ -194,7 +215,7 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
               ) : (
                 <div className="p-8 text-center">
                   <p className="text-muted-foreground text-sm">
-                    Select a date from the list to view details
+                    Select a week from the list to view details
                   </p>
                 </div>
               )}
