@@ -152,6 +152,24 @@ export function AccountabilityApp() {
     setEditingText(items[index].text);
   };
 
+  const handleSectionChange = (index: number, value: string) => {
+    if (!userId) return;
+    const newItems = [...items];
+    const section =
+      value === "none" ? undefined : (value as Exclude<SectionType, null>);
+    newItems[index] = {
+      ...newItems[index],
+      section,
+    };
+    setItems(newItems);
+    upsertList({
+      userId,
+      date: todayLocalDate,
+      items: newItems,
+      status: todaysList?.status || "draft",
+    });
+  };
+
   const handleSaveEdit = (index: number) => {
     if (editingText.trim() && userId) {
       const newItems = [...items];
@@ -572,7 +590,53 @@ export function AccountabilityApp() {
                             ) : (
                               <div className="task-row">
                                 <p className="task-text">{item.text}</p>
-                                {item.section && (
+                                {!isCompleted && (
+                                  <Select
+                                    value={item.section || "none"}
+                                    onValueChange={(value) =>
+                                      handleSectionChange(index, value)
+                                    }
+                                  >
+                                    <SelectTrigger
+                                      className={`h-7 w-auto rounded-full px-2.5 text-[10px] font-semibold uppercase tracking-wide ${
+                                        item.section === "personal"
+                                          ? "border-blue-300 bg-blue-50/80 text-blue-700"
+                                          : item.section === "work"
+                                            ? "border-violet-300 bg-violet-50/80 text-violet-700"
+                                            : "border-border bg-background text-muted-foreground"
+                                      }`}
+                                      aria-label="Edit section"
+                                    >
+                                      <SelectValue placeholder="No Section" />
+                                    </SelectTrigger>
+                                    <SelectContent
+                                      position="popper"
+                                      align="end"
+                                      sideOffset={6}
+                                      className="min-w-36 p-1.5"
+                                    >
+                                      <SelectItem
+                                        value="none"
+                                        className="rounded-lg py-2.5 pl-3.5 pr-8"
+                                      >
+                                        No Section
+                                      </SelectItem>
+                                      <SelectItem
+                                        value="personal"
+                                        className="rounded-lg py-2.5 pl-3.5 pr-8"
+                                      >
+                                        Personal
+                                      </SelectItem>
+                                      <SelectItem
+                                        value="work"
+                                        className="rounded-lg py-2.5 pl-3.5 pr-8"
+                                      >
+                                        Work
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                )}
+                                {isCompleted && item.section && (
                                   <Badge
                                     variant="outline"
                                     className={`h-5 shrink-0 text-[10px] font-semibold uppercase tracking-wide ${
