@@ -194,6 +194,10 @@ export function AccountabilityApp() {
         return "";
     }
   };
+  const getItemAccentClass = (emoji: EmojiType) =>
+    emoji
+      ? "border-foreground/35 bg-foreground/[0.11] dark:border-foreground/40 dark:bg-foreground/[0.16]"
+      : "border-border/70 bg-background";
 
   const formatForWhatsApp = () => {
     const suffix = isCompleted ? "Update" : "Goals";
@@ -302,12 +306,12 @@ export function AccountabilityApp() {
       {isCompleted && (
         <Button
           onClick={handleRevertToDraft}
-          variant="outline"
-          className="h-12 w-full rounded-2xl border-border/80 bg-background/80 text-base"
+          variant="secondary"
+          className="h-12 w-full rounded-2xl border border-amber-300/70 bg-amber-100/70 text-amber-900 hover:bg-amber-200/70 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-200 dark:hover:bg-amber-500/20 text-base"
           size="lg"
         >
           <IconX className="mr-2 h-5 w-5" />
-          Revert to Draft
+          Back to Goals
         </Button>
       )}
 
@@ -496,8 +500,11 @@ export function AccountabilityApp() {
               ) : (
                 <div className="space-y-3">
                   {items.map((item, index) => (
-                    <Card key={index} className="task-card rounded-md">
-                      <CardContent className="px-3 py-1 sm:px-3.5 sm:py-2.5">
+                    <Card
+                      key={index}
+                      className={`task-card rounded-md transition-colors ${isCompleted ? getItemAccentClass(item.emoji) : ""}`}
+                    >
+                      <CardContent className="px-3.5 py-3 sm:px-4 sm:py-3.5">
                         <div className="task-row">
                           <div className="flex-1 min-w-0">
                             {editingIndex === index ? (
@@ -555,7 +562,7 @@ export function AccountabilityApp() {
 
                             {/* Emoji Selection - Only in completed mode */}
                             {isCompleted && (
-                              <div className="mt-2.5 space-y-2.5">
+                              <div className="mt-3 space-y-3">
                                 <div className="flex gap-2.5">
                                   <Button
                                     size="lg"
@@ -622,13 +629,16 @@ export function AccountabilityApp() {
 
                           {/* Edit and Remove buttons - Only in draft mode */}
                           {!isCompleted && editingIndex !== index && (
-                            <div className="flex shrink-0 items-center gap-3">
-                              <Separator orientation="vertical" className=" md:block" />
+                            <div className="flex shrink-0 items-center gap-2.5">
+                              <Separator
+                                orientation="vertical"
+                                className="hidden h-5 md:block"
+                              />
                               <Button
                                 size="icon"
                                 variant="ghost"
                                 onClick={() => handleEditItem(index)}
-                                className="h-4 w-4 rounded-xl cursor-pointer"
+                                className="h-8 w-8 rounded-xl"
                               >
                                 <IconPencil className="h-4 w-4" />
                               </Button>
@@ -636,7 +646,7 @@ export function AccountabilityApp() {
                                 size="icon"
                                 variant="ghost"
                                 onClick={() => handleRemoveItem(index)}
-                                className="h-4 w-4 rounded-xl cursor-pointer"
+                                className="h-8 w-8 rounded-xl"
                               >
                                 <IconTrash className="h-4 w-4" />
                               </Button>

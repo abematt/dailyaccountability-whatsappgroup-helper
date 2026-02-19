@@ -163,6 +163,10 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
         return "";
     }
   };
+  const getItemAccentClass = (emoji: EmojiType) =>
+    emoji
+      ? "border-foreground/35 bg-foreground/[0.11] dark:border-foreground/40 dark:bg-foreground/[0.16]"
+      : "border-border/70 bg-background";
 
   const formatForWhatsApp = () => {
     if (!weeklyGoals) return "";
@@ -262,8 +266,11 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
           ) : (
             <div className="space-y-3">
               {items.map((item, index) => (
-                <Card key={index} className="task-card">
-                  <CardContent className="px-3 py-2.5 sm:px-3.5 sm:py-2.5">
+                <Card
+                  key={index}
+                  className={`task-card transition-colors ${isCompleted ? getItemAccentClass(item.emoji) : ""}`}
+                >
+                  <CardContent className="px-3.5 py-3 sm:px-4 sm:py-3.5">
                     <div className="task-row">
                       <div className="flex-1 min-w-0">
                         {editingIndex === index ? (
@@ -311,7 +318,7 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
 
                         {/* Emoji Selection - Only in completed mode */}
                         {isCompleted && (
-                          <div className="mt-2.5 space-y-2.5">
+                          <div className="mt-3 space-y-3">
                             <div className="flex gap-2.5">
                               <Button
                                 size="lg"
@@ -396,9 +403,14 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
 
           {/* Revert to Draft Button - Only show in completed mode */}
           {isCompleted && (
-            <Button onClick={handleRevertToDraft} variant="outline" className="h-12 w-full rounded-2xl border-border/80 bg-background/80 text-base" size="lg">
+            <Button
+              onClick={handleRevertToDraft}
+              variant="secondary"
+              className="h-12 w-full rounded-2xl border border-amber-300/70 bg-amber-100/70 text-amber-900 hover:bg-amber-200/70 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-200 dark:hover:bg-amber-500/20 text-base"
+              size="lg"
+            >
               <IconX className="mr-2 h-5 w-5" />
-              Revert to Draft
+              Back to Goals
             </Button>
           )}
 
