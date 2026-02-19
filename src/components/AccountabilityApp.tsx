@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator"
+import { Separator } from "@/components/ui/separator";
 import {
   IconPlus,
   IconTrash,
@@ -83,11 +83,14 @@ export function AccountabilityApp() {
   }, [todaysList]);
 
   const isCompleted = todaysList?.status === "completed";
-  const today = new Date().toLocaleDateString("en-US", {
+  const todayDate = new Date();
+  const todayWeekday = todayDate.toLocaleDateString("en-US", {
     weekday: "long",
-    year: "numeric",
+  });
+  const todayDayMonthYear = todayDate.toLocaleDateString("en-GB", {
+    day: "2-digit",
     month: "long",
-    day: "numeric",
+    year: "numeric",
   });
 
   const handleAddItem = () => {
@@ -349,7 +352,7 @@ export function AccountabilityApp() {
                   variant={isCompleted ? "default" : "secondary"}
                   className="h-6 px-2.5 text-[11px] font-semibold uppercase tracking-wide"
                 >
-                  {isCompleted ? "Completed" : "Draft"}
+                  {isCompleted ? "Completed" : "In Progress"}
                 </Badge>
               )}
               <Button
@@ -365,7 +368,10 @@ export function AccountabilityApp() {
             </div>
           </div>
 
-          <p className="mt-1 text-sm text-muted-foreground">{today}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">{todayWeekday}</span>{" "}
+            {todayDayMonthYear}
+          </p>
         </div>
 
         {/* Content Area - Scrollable */}
@@ -401,81 +407,82 @@ export function AccountabilityApp() {
 
               {/* Add Item Section - Only show in draft mode */}
               {!isCompleted && (
-                <Card className="elevated-card">
-                  <CardContent className="p-3 sm:p-4">
-                    {/* Add Item Input */}
-                    <div className="flex items-center gap-2.5">
-                      <Input
-                        placeholder="Add goal"
-                        value={newItemText}
-                        onChange={(e) => setNewItemText(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
-                        className="h-11 rounded-2xl border-border/75 bg-background/75 text-base"
-                      />
-                      <Select
-                        value={currentSection || "none"}
-                        onValueChange={(value) =>
-                          setCurrentSection(
-                            value === "none"
-                              ? null
-                              : (value as "personal" | "work"),
-                          )
+                <div className="px-0 py-1 sm:px-3.5 sm:py-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <Input
+                      placeholder="Add goal"
+                      value={newItemText}
+                      onChange={(e) => setNewItemText(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
+                      className="h-11 flex-1 rounded-lg border-border/75 bg-background/75 text-base"
+                    />
+                    <Select
+                      value={currentSection || "none"}
+                      onValueChange={(value) =>
+                        setCurrentSection(
+                          value === "none"
+                            ? null
+                            : (value as "personal" | "work"),
+                        )
+                      }
+                    >
+                      <SelectTrigger
+                        className="!h-11 !w-11 !min-w-11 !max-w-11 rounded-2xl border-border/75 bg-background/75 !px-0 !justify-center [&>[data-slot=select-value]]:hidden [&>svg:last-child]:hidden"
+                        aria-label="Choose section"
+                        title={
+                          currentSection === "personal"
+                            ? "Personal section"
+                            : currentSection === "work"
+                              ? "Work section"
+                              : "No section"
                         }
                       >
-                        <SelectTrigger
-                          className="!h-11 !w-11 !min-w-11 !max-w-11 rounded-2xl border-border/75 bg-background/75 !px-0 !justify-center [&>[data-slot=select-value]]:hidden [&>svg:last-child]:hidden"
-                          aria-label="Choose section"
-                          title={
-                            currentSection === "personal"
-                              ? "Personal section"
-                              : currentSection === "work"
-                                ? "Work section"
-                                : "No section"
-                          }
-                        >
-                          <span className="pointer-events-none text-muted-foreground">
-                            {sectionIcon}
-                          </span>
-                          <span className="sr-only">Choose section</span>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent
-                          position="popper"
-                          align="end"
-                          sideOffset={6}
-                          className="min-w-36 p-1.5"
-                        >
-                          <SelectItem
-                            value="none"
-                            className="rounded-lg py-2.5 pl-3.5 pr-8"
-                          >
-                            No Section
-                          </SelectItem>
-                          <SelectItem
-                            value="personal"
-                            className="rounded-lg py-2.5 pl-3.5 pr-8"
-                          >
-                            Personal
-                          </SelectItem>
-                          <SelectItem
-                            value="work"
-                            className="rounded-lg py-2.5 pl-3.5 pr-8"
-                          >
-                            Work
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        onClick={handleAddItem}
-                        size="icon"
-                        className="h-11 w-11 shrink-0 rounded-2xl shadow-sm"
+                        <span className="pointer-events-none text-muted-foreground">
+                          {sectionIcon}
+                        </span>
+                        <span className="sr-only">Choose section</span>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent
+                        position="popper"
+                        align="end"
+                        sideOffset={6}
+                        className="min-w-36 p-1.5"
                       >
-                        <IconPlus className="h-5 w-5" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                        <SelectItem
+                          value="none"
+                          className="rounded-lg py-2.5 pl-3.5 pr-8"
+                        >
+                          No Section
+                        </SelectItem>
+                        <SelectItem
+                          value="personal"
+                          className="rounded-lg py-2.5 pl-3.5 pr-8"
+                        >
+                          Personal
+                        </SelectItem>
+                        <SelectItem
+                          value="work"
+                          className="rounded-lg py-2.5 pl-3.5 pr-8"
+                        >
+                          Work
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      onClick={handleAddItem}
+                      size="icon"
+                      className="h-11 w-11 shrink-0 rounded-2xl shadow-sm"
+                    >
+                      <IconPlus className="h-5 w-5" />
+                    </Button>
+                  </div>
+                </div>
               )}
+
+              <div className="px-0 sm:px-3.5">
+                <h2 className="text-sm font-semibold tracking-tight">Task List</h2>
+              </div>
 
               {/* Items List */}
               {items.length === 0 ? (

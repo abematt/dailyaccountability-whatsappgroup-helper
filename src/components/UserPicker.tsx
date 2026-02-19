@@ -6,13 +6,12 @@ interface User {
   id: UserId;
   name: string;
   initial: string;
-  color: string;
 }
 
 const USERS: User[] = [
-  { id: "abraham", name: "Abraham", initial: "A", color: "#3b82f6" }, // blue-500
-  { id: "carlo", name: "Carlo", initial: "C", color: "#22c55e" }, // green-500
-  { id: "stefania", name: "Stefania", initial: "S", color: "#a855f7" }, // purple-500
+  { id: "abraham", name: "Abraham", initial: "A" },
+  { id: "carlo", name: "Carlo", initial: "C" },
+  { id: "stefania", name: "Stefania", initial: "S" },
 ];
 
 interface UserPickerProps {
@@ -38,10 +37,9 @@ export function UserPicker({ onSelectUser }: UserPickerProps) {
             >
               <div className="flex items-center gap-4">
                 <div
-                  className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/65 shadow-inner"
-                  style={{ backgroundColor: user.color }}
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl border border-transparent bg-primary shadow-[0_10px_20px_-12px_rgba(30,64,175,0.65)]"
                 >
-                  <span className="text-lg font-semibold tracking-wide text-white">
+                  <span className="text-lg font-semibold tracking-wide text-primary-foreground">
                     {user.initial}
                   </span>
                 </div>

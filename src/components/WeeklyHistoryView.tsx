@@ -167,7 +167,7 @@ export function WeeklyHistoryView({ userId, onBack }: WeeklyHistoryViewProps) {
                       <h2 className="text-lg font-semibold tracking-tight">{formatWeekDisplay(selectedWeek)}</h2>
                     </div>
                     <Badge variant={selectedWeek.status === "completed" ? "default" : "secondary"} className="h-6 shrink-0 px-2.5 text-[11px] font-semibold uppercase tracking-wide">
-                      {selectedWeek.status === "completed" ? "Completed" : "Draft"}
+                      {selectedWeek.status === "completed" ? "Completed" : "In Progress"}
                     </Badge>
                   </div>
 

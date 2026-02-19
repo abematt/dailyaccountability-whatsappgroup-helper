@@ -156,7 +156,7 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
                       <h2 className="text-lg font-semibold tracking-tight">{formatDate(selectedList.date)}</h2>
                     </div>
                     <Badge variant={selectedList.status === "completed" ? "default" : "secondary"} className="h-6 shrink-0 px-2.5 text-[11px] font-semibold uppercase tracking-wide">
-                      {selectedList.status === "completed" ? "Completed" : "Draft"}
+                      {selectedList.status === "completed" ? "Completed" : "In Progress"}
                     </Badge>
                   </div>
 

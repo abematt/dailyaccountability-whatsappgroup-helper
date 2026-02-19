@@ -74,6 +74,10 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
 
     return `Week ${weeklyGoals.weekNumber} - ${startDay} ${startMonth} - ${endDay} ${endMonth}`;
   };
+  const formatWeekRange = () => {
+    if (!weeklyGoals) return "";
+    return formatWeekDisplay().replace(`Week ${weeklyGoals.weekNumber} - `, "");
+  };
 
   const handleAddItem = () => {
     if (newItemText.trim() && userId) {
@@ -206,20 +210,21 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
             >
               <IconArrowLeft className="h-5 w-5" />
             </Button>
-            <div className="min-w-0">
-              <h1 className="truncate text-base font-semibold tracking-tight">
-                {weeklyGoals ? `Week ${weeklyGoals.weekNumber}: ${formatWeekDisplay().replace(`Week ${weeklyGoals.weekNumber} - `, "")}` : "Week"}
-              </h1>
-            </div>
+            <h1 className="truncate text-base font-semibold tracking-tight">
+              {weeklyGoals ? `Week ${weeklyGoals.weekNumber}` : "Week"}
+            </h1>
             <div className="ml-auto flex items-center gap-2 shrink-0">
               {weeklyGoals?.status && (
                 <Badge variant={isCompleted ? "default" : "secondary"} className="h-6 px-2.5 text-[11px] font-semibold uppercase tracking-wide">
-                  {isCompleted ? "Completed" : "Draft"}
+                  {isCompleted ? "Completed" : "In Progress"}
                 </Badge>
               )}
               <UserAvatar userId={userId} inline />
             </div>
           </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {weeklyGoals ? formatWeekRange() : ""}
+          </p>
         </div>
 
         {/* Content Area - Scrollable */}
