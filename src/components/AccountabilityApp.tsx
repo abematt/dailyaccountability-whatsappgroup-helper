@@ -5,9 +5,27 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { IconPlus, IconTrash, IconCheck, IconCopy, IconHistory, IconPencil, IconX, IconCalendarWeek } from "@tabler/icons-react";
+import {
+  IconPlus,
+  IconTrash,
+  IconCheck,
+  IconCopy,
+  IconHistory,
+  IconPencil,
+  IconX,
+  IconCalendarWeek,
+  IconChevronDown,
+  IconBriefcase,
+  IconUser,
+} from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { HistoryView } from "./HistoryView";
 import { WeeklyGoalsApp } from "./WeeklyGoalsApp";
 import { UserPicker, type UserId } from "./UserPicker";
@@ -29,8 +47,14 @@ export function AccountabilityApp() {
     return stored as UserId | null;
   });
 
-  const todaysList = useQuery(api.dailyLists.getTodaysList, userId ? { userId } : "skip");
-  const daysSinceWeeklyUpdate = useQuery(api.weeklyGoals.getDaysSinceLastUpdate, userId ? { userId } : "skip");
+  const todaysList = useQuery(
+    api.dailyLists.getTodaysList,
+    userId ? { userId } : "skip",
+  );
+  const daysSinceWeeklyUpdate = useQuery(
+    api.weeklyGoals.getDaysSinceLastUpdate,
+    userId ? { userId } : "skip",
+  );
   const upsertList = useMutation(api.dailyLists.upsertTodaysList);
   const markCompleted = useMutation(api.dailyLists.markTodaysListCompleted);
   const revertToDraft = useMutation(api.dailyLists.revertTodaysListToDraft);
@@ -87,7 +111,11 @@ export function AccountabilityApp() {
     if (!userId) return;
     const newItems = items.filter((_, i) => i !== index);
     setItems(newItems);
-    upsertList({ userId, items: newItems, status: todaysList?.status || "draft" });
+    upsertList({
+      userId,
+      items: newItems,
+      status: todaysList?.status || "draft",
+    });
   };
 
   const handleEditItem = (index: number) => {
@@ -100,7 +128,11 @@ export function AccountabilityApp() {
       const newItems = [...items];
       newItems[index] = { ...newItems[index], text: editingText.trim() };
       setItems(newItems);
-      upsertList({ userId, items: newItems, status: todaysList?.status || "draft" });
+      upsertList({
+        userId,
+        items: newItems,
+        status: todaysList?.status || "draft",
+      });
     }
     setEditingIndex(null);
     setEditingText("");
@@ -169,21 +201,24 @@ export function AccountabilityApp() {
     let formatted = `*${todayFormatted} - ${suffix}*\n\n`;
 
     // Group items by section
-    const personalItems = items.filter(item => item.section === "personal");
-    const workItems = items.filter(item => item.section === "work");
-    const noSectionItems = items.filter(item => !item.section);
+    const personalItems = items.filter((item) => item.section === "personal");
+    const workItems = items.filter((item) => item.section === "work");
+    const noSectionItems = items.filter((item) => !item.section);
 
     // Helper function to format items with numbering or emoji prefix
     const formatSection = (sectionItems: ListItem[], startNumber: number) => {
-      return sectionItems.map((item, idx) => {
-        const emoji = getEmojiDisplay(item.emoji);
-        const explanation = item.emoji === "yellow" && item.explanation
-          ? ` (${item.explanation})`
-          : "";
-        // Use emoji as prefix if completed, otherwise use numbering
-        const prefix = isCompleted && emoji ? emoji : `${startNumber + idx}.`;
-        return `${prefix} ${item.text}${explanation}`;
-      }).join("\n");
+      return sectionItems
+        .map((item, idx) => {
+          const emoji = getEmojiDisplay(item.emoji);
+          const explanation =
+            item.emoji === "yellow" && item.explanation
+              ? ` (${item.explanation})`
+              : "";
+          // Use emoji as prefix if completed, otherwise use numbering
+          const prefix = isCompleted && emoji ? emoji : `${startNumber + idx}.`;
+          return `${prefix} ${item.text}${explanation}`;
+        })
+        .join("\n");
     };
 
     let currentNumber = 1;
@@ -226,65 +261,80 @@ export function AccountabilityApp() {
   }
 
   if (showWeekly) {
-    return <WeeklyGoalsApp userId={userId} onBack={() => setShowWeekly(false)} />;
+    return (
+      <WeeklyGoalsApp userId={userId} onBack={() => setShowWeekly(false)} />
+    );
   }
 
   if (showHistory) {
     return <HistoryView userId={userId} onBack={() => setShowHistory(false)} />;
   }
 
-  const showWeeklyReminder = daysSinceWeeklyUpdate !== undefined && daysSinceWeeklyUpdate >= 7;
+  const showWeeklyReminder =
+    daysSinceWeeklyUpdate !== undefined && daysSinceWeeklyUpdate >= 7;
+  const sectionIcon =
+    currentSection === "work" ? (
+      <IconBriefcase className="h-5 w-5" />
+    ) : currentSection === "personal" ? (
+      <IconUser className="h-5 w-5" />
+    ) : (
+      <IconChevronDown className="h-5 w-5" />
+    );
 
   return (
-    <div className="flex flex-col h-screen bg-muted/30">
-      {/* User Avatar Badge */}
-      <UserAvatar userId={userId} />
-      <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full min-h-0">
+    <div className="app-shell">
+      <div className="app-frame">
         {/* Header - Fixed */}
-        <div className="p-4 bg-background border-b shrink-0">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-semibold tracking-tight">Daily Accountability</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">{today}</p>
-            </div>
+        <div className="app-header shrink-0">
+          <div className="flex items-center justify-between">
+            <h1 className="text-[1.28rem] font-semibold tracking-tight text-balance">
+              Today's Goals
+            </h1>
             <div className="flex items-center gap-2 shrink-0">
+              {todaysList?.status && (
+                <Badge
+                  variant={isCompleted ? "default" : "secondary"}
+                  className="h-6 px-2.5 text-[11px] font-semibold uppercase tracking-wide"
+                >
+                  {isCompleted ? "Completed" : "Draft"}
+                </Badge>
+              )}
               <Button
                 size="icon"
                 variant="ghost"
                 onClick={() => setShowWeekly(true)}
-                className="h-9 w-9"
+                className="h-10 w-10 rounded-2xl border border-border/70 bg-background/60"
                 title="Weekly Goals"
               >
                 <IconCalendarWeek className="h-5 w-5" />
               </Button>
-              {todaysList?.status && (
-                <Badge variant={isCompleted ? "default" : "secondary"}>
-                  {isCompleted ? "Completed" : "Draft"}
-                </Badge>
-              )}
+              <UserAvatar userId={userId} inline />
             </div>
           </div>
+
+          <p className="mt-1 text-sm text-muted-foreground">{today}</p>
         </div>
 
         {/* Content Area - Scrollable */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+        <div className="app-content space-y-4">
           {/* 7-Day Reminder Banner */}
           {showWeeklyReminder && (
-            <Card className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
-              <CardContent className="p-4">
+            <Card className="elevated-card border-amber-300/80 bg-gradient-to-r from-amber-50/95 via-amber-50/85 to-orange-50/90">
+              <CardContent className="p-3.5 sm:p-5">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
-                      You haven't updated your weekly progress in {daysSinceWeeklyUpdate} days
+                    <p className="text-sm font-semibold text-amber-900">
+                      You haven't updated your weekly progress in{" "}
+                      {daysSinceWeeklyUpdate} days
                     </p>
-                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                    <p className="mt-1 text-xs text-amber-700">
                       Keep your momentum going by reviewing your weekly goals
                     </p>
                   </div>
                   <Button
                     size="sm"
                     onClick={() => setShowWeekly(true)}
-                    className="shrink-0 bg-amber-600 hover:bg-amber-700 text-white"
+                    className="h-9 shrink-0 rounded-xl bg-amber-600 px-3 text-white hover:bg-amber-700"
                   >
                     Update Now
                   </Button>
@@ -295,57 +345,100 @@ export function AccountabilityApp() {
 
           {/* Add Item Section - Only show in draft mode */}
           {!isCompleted && (
-            <div className="space-y-2">
-              {/* Section Selector */}
-              <Select
-                value={currentSection || "none"}
-                onValueChange={(value) => setCurrentSection(value === "none" ? null : value as "personal" | "work")}
-              >
-                <SelectTrigger className="w-fit h-9 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No Section</SelectItem>
-                  <SelectItem value="personal">Personal</SelectItem>
-                  <SelectItem value="work">Work</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Add Item Input */}
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Add a new item..."
-                  value={newItemText}
-                  onChange={(e) => setNewItemText(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
-                  className="text-base h-12"
-                />
-                <Button onClick={handleAddItem} size="icon" className="shrink-0 h-12 w-12">
-                  <IconPlus className="h-5 w-5" />
-                </Button>
-              </div>
-            </div>
+            <Card className="elevated-card">
+              <CardContent className="p-3 sm:p-4">
+                {/* Add Item Input */}
+                <div className="flex items-center gap-2.5">
+                  <Input
+                    placeholder="Add goal"
+                    value={newItemText}
+                    onChange={(e) => setNewItemText(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
+                    className="h-11 rounded-2xl border-border/75 bg-background/75 text-base"
+                  />
+                  <Select
+                    value={currentSection || "none"}
+                    onValueChange={(value) =>
+                      setCurrentSection(
+                        value === "none"
+                          ? null
+                          : (value as "personal" | "work"),
+                      )
+                    }
+                  >
+                    <SelectTrigger
+                      className="!h-11 !w-11 !min-w-11 !max-w-11 rounded-2xl border-border/75 bg-background/75 !px-0 !justify-center [&>[data-slot=select-value]]:hidden [&>svg:last-child]:hidden"
+                      aria-label="Choose section"
+                      title={
+                        currentSection === "personal"
+                          ? "Personal section"
+                          : currentSection === "work"
+                            ? "Work section"
+                            : "No section"
+                      }
+                    >
+                      <span className="pointer-events-none text-muted-foreground">
+                        {sectionIcon}
+                      </span>
+                      <span className="sr-only">Choose section</span>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent
+                      position="popper"
+                      align="end"
+                      sideOffset={6}
+                      className="min-w-36 p-1.5"
+                    >
+                      <SelectItem
+                        value="none"
+                        className="rounded-lg py-2.5 pl-3.5 pr-8"
+                      >
+                        No Section
+                      </SelectItem>
+                      <SelectItem
+                        value="personal"
+                        className="rounded-lg py-2.5 pl-3.5 pr-8"
+                      >
+                        Personal
+                      </SelectItem>
+                      <SelectItem
+                        value="work"
+                        className="rounded-lg py-2.5 pl-3.5 pr-8"
+                      >
+                        Work
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    onClick={handleAddItem}
+                    size="icon"
+                    className="h-11 w-11 shrink-0 rounded-2xl shadow-sm"
+                  >
+                    <IconPlus className="h-5 w-5" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Items List */}
           {items.length === 0 ? (
-            <div className="flex items-center justify-center py-12">
-              <p className="text-center text-muted-foreground text-sm">
-                No items yet. Add your first item to get started!
-              </p>
-            </div>
+            <Card className="elevated-card">
+              <CardContent className="flex items-center justify-center py-10 sm:py-14">
+                <p className="text-center text-muted-foreground text-sm">
+                  No items yet. Add your first item to get started!
+                </p>
+              </CardContent>
+            </Card>
           ) : (
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               {items.map((item, index) => (
-                <Card key={index}>
-                  <CardContent className="p-3">
-                    <div className="flex items-start gap-3">
-                      <span className="font-semibold text-muted-foreground min-w-6 text-base shrink-0 mt-0.5">
-                        {index + 1}.
-                      </span>
+                <Card key={index} className="task-card">
+                  <CardContent className="px-3 py-2.5 sm:px-3.5 sm:py-2.5">
+                    <div className="task-row">
                       <div className="flex-1 min-w-0">
                         {editingIndex === index ? (
-                          <div className="flex gap-2 items-center mb-1">
+                          <div className="task-row">
                             <Input
                               value={editingText}
                               onChange={(e) => setEditingText(e.target.value)}
@@ -354,13 +447,13 @@ export function AccountabilityApp() {
                                 if (e.key === "Escape") handleCancelEdit();
                               }}
                               autoFocus
-                              className="text-base h-9"
+                              className="h-10 rounded-xl border-border/75 bg-background/75 text-base"
                             />
                             <Button
                               size="icon"
                               variant="ghost"
                               onClick={() => handleSaveEdit(index)}
-                              className="h-8 w-8 shrink-0"
+                              className="h-9 w-9 shrink-0 rounded-xl"
                             >
                               <IconCheck className="h-4 w-4" />
                             </Button>
@@ -368,24 +461,26 @@ export function AccountabilityApp() {
                               size="icon"
                               variant="ghost"
                               onClick={handleCancelEdit}
-                              className="h-8 w-8 shrink-0"
+                              className="h-9 w-9 shrink-0 rounded-xl"
                             >
                               <IconX className="h-4 w-4" />
                             </Button>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-2 mb-1">
-                            <p className="text-base leading-relaxed wrap-break-word">{item.text}</p>
+                          <div className="task-row">
+                            <p className="task-text">{item.text}</p>
                             {item.section && (
                               <Badge
                                 variant="outline"
-                                className={`shrink-0 text-xs ${
+                                className={`h-5 shrink-0 text-[10px] font-semibold uppercase tracking-wide ${
                                   item.section === "personal"
-                                    ? "border-blue-500 text-blue-700 dark:text-blue-400"
-                                    : "border-purple-500 text-purple-700 dark:text-purple-400"
+                                    ? "border-blue-300 bg-blue-50/80 text-blue-700"
+                                    : "border-violet-300 bg-violet-50/80 text-violet-700"
                                 }`}
                               >
-                                {item.section === "personal" ? "Personal" : "Work"}
+                                {item.section === "personal"
+                                  ? "Personal"
+                                  : "Work"}
                               </Badge>
                             )}
                           </div>
@@ -393,29 +488,39 @@ export function AccountabilityApp() {
 
                         {/* Emoji Selection - Only in completed mode */}
                         {isCompleted && (
-                          <div className="mt-4 space-y-3">
-                            <div className="flex gap-2">
+                          <div className="mt-2.5 space-y-2.5">
+                            <div className="flex gap-2.5">
                               <Button
                                 size="lg"
-                                variant={item.emoji === "green" ? "default" : "outline"}
+                                variant={
+                                  item.emoji === "green" ? "default" : "outline"
+                                }
                                 onClick={() => handleEmojiClick(index, "green")}
-                                className="text-2xl h-14 w-14 p-0 rounded-full"
+                                className="h-12 w-12 rounded-2xl p-0 text-2xl sm:h-14 sm:w-14"
                               >
                                 🟢
                               </Button>
                               <Button
                                 size="lg"
-                                variant={item.emoji === "yellow" ? "default" : "outline"}
-                                onClick={() => handleEmojiClick(index, "yellow")}
-                                className="text-2xl h-14 w-14 p-0 rounded-full"
+                                variant={
+                                  item.emoji === "yellow"
+                                    ? "default"
+                                    : "outline"
+                                }
+                                onClick={() =>
+                                  handleEmojiClick(index, "yellow")
+                                }
+                                className="h-12 w-12 rounded-2xl p-0 text-2xl sm:h-14 sm:w-14"
                               >
                                 🟡
                               </Button>
                               <Button
                                 size="lg"
-                                variant={item.emoji === "red" ? "default" : "outline"}
+                                variant={
+                                  item.emoji === "red" ? "default" : "outline"
+                                }
                                 onClick={() => handleEmojiClick(index, "red")}
-                                className="text-2xl h-14 w-14 p-0 rounded-full"
+                                className="h-12 w-12 rounded-2xl p-0 text-2xl sm:h-14 sm:w-14"
                               >
                                 🔴
                               </Button>
@@ -430,7 +535,7 @@ export function AccountabilityApp() {
                                   handleExplanationChange(index, e.target.value)
                                 }
                                 onBlur={handleSaveExplanation}
-                                className="text-sm min-h-20 resize-none"
+                                className="min-h-20 rounded-2xl border-border/75 bg-background/70 text-sm resize-none"
                               />
                             )}
                           </div>
@@ -439,12 +544,12 @@ export function AccountabilityApp() {
 
                       {/* Edit and Remove buttons - Only in draft mode */}
                       {!isCompleted && editingIndex !== index && (
-                        <div className="flex gap-1 shrink-0 -mt-1 -mr-1">
+                        <div className="flex shrink-0 items-center gap-1.5">
                           <Button
                             size="icon"
                             variant="ghost"
                             onClick={() => handleEditItem(index)}
-                            className="h-9 w-9"
+                            className="h-9 w-9 rounded-xl"
                           >
                             <IconPencil className="h-4 w-4" />
                           </Button>
@@ -452,7 +557,7 @@ export function AccountabilityApp() {
                             size="icon"
                             variant="ghost"
                             onClick={() => handleRemoveItem(index)}
-                            className="h-9 w-9"
+                            className="h-9 w-9 rounded-xl"
                           >
                             <IconTrash className="h-4 w-4" />
                           </Button>
@@ -467,10 +572,14 @@ export function AccountabilityApp() {
         </div>
 
         {/* Footer Actions - Fixed */}
-        <div className="p-4 bg-background border-t space-y-2 shrink-0">
+        <div className="app-footer space-y-2.5 shrink-0">
           {/* Mark Completed Button - Only show in draft mode */}
           {!isCompleted && items.length > 0 && (
-            <Button onClick={handleMarkCompleted} className="w-full h-12 text-base" size="lg">
+            <Button
+              onClick={handleMarkCompleted}
+              className="h-12 w-full rounded-2xl text-base shadow-sm"
+              size="lg"
+            >
               <IconCheck className="mr-2 h-5 w-5" />
               Mark Day Completed
             </Button>
@@ -478,7 +587,12 @@ export function AccountabilityApp() {
 
           {/* Revert to Draft Button - Only show in completed mode */}
           {isCompleted && (
-            <Button onClick={handleRevertToDraft} variant="outline" className="w-full h-12 text-base" size="lg">
+            <Button
+              onClick={handleRevertToDraft}
+              variant="outline"
+              className="h-12 w-full rounded-2xl border-border/80 bg-background/80 text-base"
+              size="lg"
+            >
               <IconX className="mr-2 h-5 w-5" />
               Revert to Draft
             </Button>
@@ -489,7 +603,7 @@ export function AccountabilityApp() {
             <Button
               onClick={handleCopy}
               variant={copied ? "default" : "outline"}
-              className="w-full h-12 text-base"
+              className="h-12 w-full rounded-2xl text-base"
               size="lg"
             >
               <IconCopy className="mr-2 h-5 w-5" />
@@ -501,7 +615,7 @@ export function AccountabilityApp() {
           <Button
             onClick={() => setShowHistory(true)}
             variant="ghost"
-            className="w-full h-12 text-base"
+            className="h-12 w-full rounded-2xl text-base"
             size="lg"
           >
             <IconHistory className="mr-2 h-5 w-5" />

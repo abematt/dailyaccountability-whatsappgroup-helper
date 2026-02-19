@@ -21,30 +21,34 @@ interface UserPickerProps {
 
 export function UserPicker({ onSelectUser }: UserPickerProps) {
   return (
-    <div className="fixed inset-0 bg-background flex items-center justify-center p-4 z-50">
-      <div className="max-w-md w-full space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold">Welcome!</h1>
-          <p className="text-muted-foreground">Who are you?</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4">
+      <div className="w-full max-w-lg space-y-6 rounded-3xl border border-white/60 bg-background/85 p-6 shadow-[0_28px_70px_-30px_rgba(15,23,42,0.55)] backdrop-blur-2xl sm:p-8">
+        <div className="space-y-2 text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">Accountability</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-balance">Choose your profile</h1>
+          <p className="text-sm text-muted-foreground">Your data stays scoped to the selected user.</p>
         </div>
 
         <div className="grid gap-3">
           {USERS.map((user) => (
             <Card
               key={user.id}
-              className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+              className="elevated-card cursor-pointer p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_16px_36px_-22px_rgba(15,23,42,0.45)]"
               onClick={() => onSelectUser(user.id)}
             >
               <div className="flex items-center gap-4">
                 <div
-                  className="h-12 w-12 rounded-full flex items-center justify-center"
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/65 shadow-inner"
                   style={{ backgroundColor: user.color }}
                 >
-                  <span className="text-white text-lg font-semibold">
+                  <span className="text-lg font-semibold tracking-wide text-white">
                     {user.initial}
                   </span>
                 </div>
-                <span className="text-lg font-medium">{user.name}</span>
+                <div className="min-w-0">
+                  <p className="text-lg font-semibold leading-tight">{user.name}</p>
+                  <p className="text-xs text-muted-foreground">Tap to continue</p>
+                </div>
               </div>
             </Card>
           ))}
