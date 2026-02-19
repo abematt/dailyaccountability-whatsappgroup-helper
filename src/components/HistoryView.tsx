@@ -1,17 +1,19 @@
 import * as React from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { IconChevronLeft, IconCopy } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
+import type { UserId } from "./UserPicker";
 
 interface HistoryViewProps {
+  userId: UserId;
   onBack: () => void;
 }
 
-export function HistoryView({ onBack }: HistoryViewProps) {
-  const allLists = useQuery(api.dailyLists.getAllLists);
+export function HistoryView({ userId, onBack }: HistoryViewProps) {
+  const allLists = useQuery(api.dailyLists.getAllLists, { userId });
   const [selectedDate, setSelectedDate] = React.useState<string | null>(null);
   const [copied, setCopied] = React.useState(false);
 
