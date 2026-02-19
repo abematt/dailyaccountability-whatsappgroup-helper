@@ -42,20 +42,31 @@ interface ListItem {
   section?: "personal" | "work";
 }
 
+function getLocalDateString() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export function AccountabilityApp() {
   const [userId, setUserId] = React.useState<UserId | null>(() => {
     const stored = localStorage.getItem("userId");
     return stored as UserId | null;
   });
+  const todayLocalDate = React.useMemo(() => getLocalDateString(), []);
+  const isInitializingTodayRef = React.useRef(false);
 
   const todaysList = useQuery(
     api.dailyLists.getTodaysList,
-    userId ? { userId } : "skip",
+    userId ? { userId, date: todayLocalDate } : "skip",
   );
   const daysSinceWeeklyUpdate = useQuery(
     api.weeklyGoals.getDaysSinceLastUpdate,
     userId ? { userId } : "skip",
   );
+  const initializeTodaysList = useMutation(api.dailyLists.initializeTodaysList);
   const upsertList = useMutation(api.dailyLists.upsertTodaysList);
   const markCompleted = useMutation(api.dailyLists.markTodaysListCompleted);
   const revertToDraft = useMutation(api.dailyLists.revertTodaysListToDraft);
@@ -79,8 +90,20 @@ export function AccountabilityApp() {
   React.useEffect(() => {
     if (todaysList?.items) {
       setItems(todaysList.items);
+      return;
+    }
+    if (todaysList === null) {
+      setItems([]);
     }
   }, [todaysList]);
+
+  React.useEffect(() => {
+    if (!userId || todaysList !== null || isInitializingTodayRef.current) return;
+    isInitializingTodayRef.current = true;
+    initializeTodaysList({ userId, date: todayLocalDate }).finally(() => {
+      isInitializingTodayRef.current = false;
+    });
+  }, [initializeTodaysList, todayLocalDate, todaysList, userId]);
 
   const isCompleted = todaysList?.status === "completed";
   const todayDate = new Date();
@@ -107,7 +130,7 @@ export function AccountabilityApp() {
       const newItems = [...items, newItem];
       setItems(newItems);
       setNewItemText("");
-      upsertList({ userId, items: newItems, status: "draft" });
+      upsertList({ userId, date: todayLocalDate, items: newItems, status: "draft" });
     }
   };
 
@@ -117,6 +140,7 @@ export function AccountabilityApp() {
     setItems(newItems);
     upsertList({
       userId,
+      date: todayLocalDate,
       items: newItems,
       status: todaysList?.status || "draft",
     });
@@ -134,6 +158,7 @@ export function AccountabilityApp() {
       setItems(newItems);
       upsertList({
         userId,
+        date: todayLocalDate,
         items: newItems,
         status: todaysList?.status || "draft",
       });
@@ -149,12 +174,12 @@ export function AccountabilityApp() {
 
   const handleMarkCompleted = async () => {
     if (!userId) return;
-    await markCompleted({ userId });
+    await markCompleted({ userId, date: todayLocalDate });
   };
 
   const handleRevertToDraft = async () => {
     if (!userId) return;
-    await revertToDraft({ userId });
+    await revertToDraft({ userId, date: todayLocalDate });
   };
 
   const handleEmojiClick = (index: number, emoji: EmojiType) => {
@@ -168,7 +193,7 @@ export function AccountabilityApp() {
     }
 
     setItems(newItems);
-    updateEmojis({ userId, items: newItems });
+    updateEmojis({ userId, date: todayLocalDate, items: newItems });
   };
 
   const handleExplanationChange = (index: number, explanation: string) => {
@@ -179,7 +204,7 @@ export function AccountabilityApp() {
 
   const handleSaveExplanation = () => {
     if (!userId) return;
-    updateEmojis({ userId, items });
+    updateEmojis({ userId, date: todayLocalDate, items });
   };
 
   const getEmojiDisplay = (emoji: EmojiType) => {
