@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**IMPORTANT**: When making changes to features, UI/UX, or architecture, always update this CLAUDE.md file to reflect those changes. If changes are reverted, update the documentation accordingly.
+
 ## Project Overview
 
 This is a **mobile-first** React-based daily accountability tracking application that allows multiple users (Abraham, Carlo, Stefania) to create daily task lists, mark items as complete/partial/incomplete with emoji indicators, and export formatted lists for WhatsApp. The application uses Convex as the backend database with simple localStorage-based user selection.
@@ -14,11 +16,17 @@ This is a **mobile-first** React-based daily accountability tracking application
 
 ### Running the Application
 ```bash
-npm run dev          # Start Vite dev server (frontend)
+npm run dev          # Start Vite dev server (frontend) with dev Convex
 npx convex dev       # Start Convex backend in development mode
 ```
 
 You need to run BOTH commands concurrently in separate terminals for full functionality.
+
+**Testing with Production Convex:**
+```bash
+npm run dev -- --mode production  # Use production Convex backend with local frontend
+```
+This loads `.env.production` instead of `.env.development`, allowing you to test against production data locally.
 
 ### Building and Linting
 ```bash
@@ -74,8 +82,10 @@ npm run preview      # Preview production build
    - Small avatar badge appears in top-right corner showing current user
 2. **Auto-Carryover**: When accessing a new day, the system automatically:
    - Creates new day entry via `initializeTodaysList` mutation
+   - **Auto-marks previous draft days**: If previous day status is "draft" (never completed), all items are automatically marked as red (incomplete)
    - Checks previous day's status and carries over incomplete items:
-     - Items marked yellow (partial) or red (incomplete) are carried over
+     - If previous day was **completed**: only items marked yellow/red are carried over
+     - If previous day was **draft** (never marked): ALL items are carried over (after auto-marking as red)
      - Items marked green (complete) are NOT carried over
      - Carried items have their emoji status reset to null (unrated)
    - Empty previous day: starts with empty list
@@ -83,6 +93,7 @@ npm run preview      # Preview production build
    - Optional: User can assign items to "Personal" or "Work" sections via dropdown selector
    - Each item has a section dropdown to change categorization after creation
    - Inline editing: Click pencil icon to edit item text
+   - **Quick complete**: Click green checkmark button to mark item as complete without full review
 4. User marks the day as "completed" (locks the list for review)
 5. In completed mode, user assigns emoji status to each item:
    - 🟢 Green = completed successfully
@@ -91,7 +102,12 @@ npm run preview      # Preview production build
 6. User can revert completed day back to "draft" to make changes
 7. User can copy formatted list to clipboard for WhatsApp sharing
    - WhatsApp formatting groups items by section with headers
-8. Historical lists are viewable in the HistoryView component (filtered by current user)
+8. **Historical Editing**: Users can view and mark emoji status for any past day in HistoryView
+   - Click "Edit" button in header to enter edit mode
+   - For completed days: change emoji status (🟢🟡🔴) and add explanations (saved live)
+   - For draft days: "Mark Day Completed" transitions to emoji marking mode
+   - No add/edit/delete functionality - items are read-only
+   - All changes save automatically to database
 
 #### Weekly Goals Flow
 1. User clicks "Weekly" button in navbar to access WeeklyGoalsApp
@@ -162,7 +178,14 @@ npm run preview      # Preview production build
 - Components use Tailwind CSS v4 with CSS variables
 
 ### Environment Variables
-- `VITE_CONVEX_URL` - Required for Convex client connection (defined in .env.local)
+- Environment files control which Convex backend to use:
+  - `.env.development` - Development Convex backend (default for `npm run dev`)
+  - `.env.production` - Production Convex backend (used with `npm run dev -- --mode production`)
+  - `.env.local` - Local overrides (gitignored, not committed)
+- Key variables:
+  - `VITE_CONVEX_URL` - Convex backend URL
+  - `CONVEX_DEPLOYMENT` - Deployment identifier for Convex CLI
+  - `VITE_CONVEX_SITE_URL` - Convex site URL
 
 ## Key Features
 
@@ -215,6 +238,30 @@ npm run preview      # Preview production build
 - Edit mode shows input field with Save (check) and Cancel (X) buttons
 - Keyboard shortcuts: Enter to save, Escape to cancel
 - Auto-focuses the input field for immediate typing
+
+### Quick Complete
+- **Individual item completion** available in draft mode
+- Green checkmark button appears next to each item
+- Click to toggle item between complete (green) and unmarked (null)
+- Visual feedback: item background turns light green when marked complete
+- Marked items persist through "Mark Day Completed" action
+- Provides quick completion without full day review
+
+### Historical Day Editing
+- **Simplified editing** for any past day via HistoryView
+- **Edit/View toggle** button appears next to the status badge in the header
+  - Click "Edit" (pencil icon) to enter edit mode
+  - Click "View" (X icon) to exit edit mode - button turns amber when in edit mode
+  - Visual feedback: button color changes to amber when editing is active
+- **Edit mode functionality (read-only items, live emoji marking)**:
+  - **For completed days**: Assign or change emoji status (🟢🟡🔴) with optional explanations for yellow items
+  - **For draft days**: "Mark Day Completed" button transitions day to completed status and shows emoji marking UI
+  - **Revert to Draft**: Available for completed days via "Back to Goals" button
+  - **No add/edit/delete**: Cannot add new items, edit item text, or delete items
+  - **No section changes**: Sections display as static badges, not editable
+  - **Live updates**: All emoji changes and explanations save immediately to database (no save button)
+- "Copy for WhatsApp" button available in both view and edit modes
+- No time restrictions - edit any historical day
 
 ### Revert to Draft
 - Completed days/weeks can be reverted back to draft mode

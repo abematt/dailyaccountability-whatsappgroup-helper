@@ -58,9 +58,29 @@ export const initializeTodaysList = mutation({
       )
       .first();
 
+    // Auto-mark previous day's items as red if day was never completed
+    if (previousList && previousList.status === "draft") {
+      const autoMarkedItems = previousList.items.map((item) => ({
+        ...item,
+        emoji: item.emoji || ("red" as const), // Set null items to red, preserve existing emojis
+      }));
+
+      await ctx.db.patch(previousList._id, {
+        items: autoMarkedItems,
+      });
+    }
+
+    // Carry-over logic based on previous day's status
     const carriedOverItems =
       previousList?.items
-        .filter((item) => item.emoji !== "green")
+        .filter((item) => {
+          // If previous day was completed, only carry over yellow/red
+          if (previousList.status === "completed") {
+            return item.emoji === "yellow" || item.emoji === "red";
+          }
+          // If previous day was draft (not marked), carry over all items
+          return true;
+        })
         .map((item) => ({
           text: item.text,
           emoji: null as null,

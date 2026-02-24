@@ -226,6 +226,18 @@ export function AccountabilityApp() {
     updateEmojis({ userId, date: todayLocalDate, items });
   };
 
+  const handleQuickComplete = (index: number) => {
+    if (!userId) return;
+    const newItems = [...items];
+    // Toggle between green and null
+    newItems[index] = {
+      ...newItems[index],
+      emoji: newItems[index].emoji === "green" ? null : "green",
+    };
+    setItems(newItems);
+    updateEmojis({ userId, date: todayLocalDate, items: newItems });
+  };
+
   const getEmojiDisplay = (emoji: EmojiType) => {
     switch (emoji) {
       case "green":
@@ -549,7 +561,13 @@ export function AccountabilityApp() {
                   {items.map((item, index) => (
                     <Card
                       key={index}
-                      className={`task-card rounded-md transition-colors ${isCompleted ? getItemAccentClass(item.emoji) : ""}`}
+                      className={`task-card rounded-md transition-colors ${
+                        isCompleted
+                          ? getItemAccentClass(item.emoji)
+                          : item.emoji === "green"
+                            ? "border-green-300/70 bg-green-50/40 dark:border-green-500/30 dark:bg-green-500/10"
+                            : ""
+                      }`}
                     >
                       <CardContent className="px-3.5 py-3 sm:px-4 sm:py-3.5">
                         <div className="task-row">
@@ -723,6 +741,21 @@ export function AccountabilityApp() {
                           {/* Edit and Remove buttons - Only in draft mode */}
                           {!isCompleted && editingIndex !== index && (
                             <div className="flex shrink-0 items-center gap-2.5">
+                              {/* Quick Complete Button */}
+                              <Button
+                                size="icon"
+                                variant={item.emoji === "green" ? "default" : "ghost"}
+                                onClick={() => handleQuickComplete(index)}
+                                className={`h-8 w-8 rounded-xl ${
+                                  item.emoji === "green"
+                                    ? "bg-green-600 hover:bg-green-700 text-white"
+                                    : ""
+                                }`}
+                                title="Mark complete"
+                              >
+                                <IconCheck className="h-4 w-4" />
+                              </Button>
+
                               <Separator
                                 orientation="vertical"
                                 className="hidden h-5 md:block"
