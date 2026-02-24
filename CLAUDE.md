@@ -34,11 +34,12 @@ npm run preview      # Preview production build
 - **Schema**: [convex/schema.ts](convex/schema.ts) - Defines two main tables:
   - `dailyLists` table with userId and date compound-indexed entries
   - `weeklyGoals` table with userId, weekStart, weekNumber, year indexes
-- **Daily Lists Functions**: [convex/dailyLists.ts](convex/dailyLists.ts) - Contains queries and mutations (all require userId parameter):
-  - `getTodaysList` - Fetches today's list for a specific user
+- **Daily Lists Functions**: [convex/dailyLists.ts](convex/dailyLists.ts) - Contains queries and mutations (all require userId parameter, most require date parameter):
+  - `getTodaysList` - Fetches today's list for a specific user (requires userId and date)
   - `getListByDate` - Fetches a specific date's list for a user
   - `getAllLists` - Fetches all historical lists for a user
-  - `upsertTodaysList` - Creates or updates today's list for a user (includes userId and section field)
+  - `initializeTodaysList` - Creates new day with auto-carryover from previous day (carries over non-green items)
+  - `upsertTodaysList` - Creates or updates today's list for a user (includes userId, date, and section field)
   - `markTodaysListCompleted` - Marks today's list as completed for a user
   - `revertTodaysListToDraft` - Reverts a completed day back to draft mode for a user
   - `updateItemsWithEmojis` - Updates emoji assignments for items for a user
@@ -71,18 +72,26 @@ npm run preview      # Preview production build
 1. **User Selection**: On first visit, user selects their profile (Abraham/Carlo/Stefania) from UserPicker
    - Selection stored in localStorage as userId
    - Small avatar badge appears in top-right corner showing current user
-2. User creates a daily list in "draft" mode (can add/remove/edit items)
-   - Optional: User can assign items to "Personal" or "Work" sections via dropdown
+2. **Auto-Carryover**: When accessing a new day, the system automatically:
+   - Creates new day entry via `initializeTodaysList` mutation
+   - Checks previous day's status and carries over incomplete items:
+     - Items marked yellow (partial) or red (incomplete) are carried over
+     - Items marked green (complete) are NOT carried over
+     - Carried items have their emoji status reset to null (unrated)
+   - Empty previous day: starts with empty list
+3. User creates a daily list in "draft" mode (can add/remove/edit items)
+   - Optional: User can assign items to "Personal" or "Work" sections via dropdown selector
+   - Each item has a section dropdown to change categorization after creation
    - Inline editing: Click pencil icon to edit item text
-3. User marks the day as "completed" (locks the list for review)
-4. In completed mode, user assigns emoji status to each item:
+4. User marks the day as "completed" (locks the list for review)
+5. In completed mode, user assigns emoji status to each item:
    - 🟢 Green = completed successfully
    - 🟡 Yellow = partially completed (with optional explanation)
    - 🔴 Red = not completed
-5. User can revert completed day back to "draft" to make changes
-6. User can copy formatted list to clipboard for WhatsApp sharing
+6. User can revert completed day back to "draft" to make changes
+7. User can copy formatted list to clipboard for WhatsApp sharing
    - WhatsApp formatting groups items by section with headers
-7. Historical lists are viewable in the HistoryView component (filtered by current user)
+8. Historical lists are viewable in the HistoryView component (filtered by current user)
 
 #### Weekly Goals Flow
 1. User clicks "Weekly" button in navbar to access WeeklyGoalsApp
@@ -188,7 +197,11 @@ npm run preview      # Preview production build
 
 ### Subsections (Personal/Work)
 - Users can optionally categorize items into "Personal" or "Work" sections
-- Section dropdown appears above the "Add item" input in draft mode
+- Section dropdown appears above the "Add item" input in draft mode to set default section for new items
+- **Per-Item Section Editing**: Each item in draft mode has its own dropdown to change section after creation
+  - Dropdown shows "No Section", "Personal", or "Work" options
+  - Section can be changed independently for each item at any time in draft mode
+  - In completed mode, sections display as static colored badges (not editable)
 - Selected section persists until changed
 - Items display colored badges: blue for Personal, purple for Work
 - WhatsApp formatting groups items by section:
@@ -227,9 +240,11 @@ npm run preview      # Preview production build
   - Daily lists: `userId + date`
   - Weekly goals: `userId + weekStart`, `userId + year + weekNumber`
 - All queries and mutations require a userId parameter to filter data by user
-- Dates calculated server-side in Convex functions to ensure consistency
+- **Date Handling**: Dates are calculated client-side and passed to Convex functions as parameters
+  - Client uses `getLocalDateString()` helper to ensure consistent YYYY-MM-DD formatting
+  - Most daily list functions require both `userId` and `date` parameters
 - Week calculations use ISO 8601 standard: Monday as week start, Sunday as end
-- Weekly goals initialized lazily via mutation (queries are read-only)
+- Both daily lists and weekly goals are initialized lazily via mutations (queries are read-only)
 
 ### User & State Management
 - User selection is stored in localStorage with key "userId" (values: "abraham", "carlo", "stefania")
