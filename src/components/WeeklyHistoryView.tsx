@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { IconChevronLeft, IconCopy } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 import type { UserId } from "./UserPicker";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface WeeklyHistoryViewProps {
   userId: UserId;
@@ -121,11 +122,17 @@ export function WeeklyHistoryView({ userId, onBack }: WeeklyHistoryViewProps) {
                   </div>
                 ) : (
                   <div className="space-y-2.5">
-                    {historyWeeks.map((week) => (
-                      <button
-                        key={week._id}
-                        onClick={() => setSelectedWeekStart(week.weekStart)}
-                        className={`elevated-card w-full text-left flex items-center justify-between rounded-2xl p-4 transition-all ${
+                    <AnimatePresence mode="popLayout">
+                      {historyWeeks.map((week, index) => (
+                        <motion.button
+                          key={week._id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 20 }}
+                          transition={{ duration: 0.2, delay: index * 0.05 }}
+                          layout
+                          onClick={() => setSelectedWeekStart(week.weekStart)}
+                          className={`elevated-card w-full text-left flex items-center justify-between rounded-2xl p-4 transition-all ${
                           selectedWeekStart === week.weekStart
                             ? "border-primary/55 bg-primary/10"
                             : "hover:-translate-y-0.5 hover:border-primary/35"
@@ -136,10 +143,11 @@ export function WeeklyHistoryView({ userId, onBack }: WeeklyHistoryViewProps) {
                           variant={week.status === "completed" ? "default" : "secondary"}
                           className={selectedWeekStart === week.weekStart ? "bg-primary text-primary-foreground" : ""}
                         >
-                          {week.items.length}
-                        </Badge>
-                      </button>
-                    ))}
+                            {week.items.length}
+                          </Badge>
+                        </motion.button>
+                      ))}
+                    </AnimatePresence>
                   </div>
                 )}
               </div>
@@ -172,8 +180,16 @@ export function WeeklyHistoryView({ userId, onBack }: WeeklyHistoryViewProps) {
                   </div>
 
                   <div className="space-y-3.5">
-                    {selectedWeek.items.map((item, index) => (
-                      <Card key={index} className="task-card">
+                    <AnimatePresence mode="popLayout">
+                      {selectedWeek.items.map((item, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.2, delay: index * 0.05 }}
+                          layout
+                        >
+                          <Card className="task-card">
                         <CardContent className="px-3 py-2.5 sm:px-3.5 sm:py-2.5">
                           <div className="task-row">
                             <div className="flex-1 min-w-0">
@@ -199,11 +215,13 @@ export function WeeklyHistoryView({ userId, onBack }: WeeklyHistoryViewProps) {
                                 </div>
                               )}
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
                     ))}
-                  </div>
+                  </AnimatePresence>
+                </div>
 
                   <Button onClick={handleCopy} variant="outline" size="lg" className="sticky bottom-0 h-12 w-full rounded-2xl border-border/80 bg-background/85 text-base backdrop-blur">
                     <IconCopy className="mr-2 h-5 w-5" />

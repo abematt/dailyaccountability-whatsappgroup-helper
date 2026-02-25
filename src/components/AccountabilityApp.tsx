@@ -30,6 +30,8 @@ import { HistoryView } from "./HistoryView";
 import { WeeklyGoalsApp } from "./WeeklyGoalsApp";
 import { UserPicker, type UserId } from "./UserPicker";
 import { UserAvatar } from "./UserAvatar";
+import { motion, AnimatePresence } from "framer-motion";
+import { TaskSkeleton } from "@/components/ui/skeleton";
 
 type EmojiType = "green" | "yellow" | "red" | null;
 type SectionType = "personal" | "work" | null;
@@ -331,12 +333,28 @@ export function AccountabilityApp() {
 
   if (showWeekly) {
     return (
-      <WeeklyGoalsApp userId={userId} onBack={() => setShowWeekly(false)} />
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ duration: 0.2 }}
+      >
+        <WeeklyGoalsApp userId={userId} onBack={() => setShowWeekly(false)} />
+      </motion.div>
     );
   }
 
   if (showHistory) {
-    return <HistoryView userId={userId} onBack={() => setShowHistory(false)} />;
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ duration: 0.2 }}
+      >
+        <HistoryView userId={userId} onBack={() => setShowHistory(false)} />
+      </motion.div>
+    );
   }
 
   const showWeeklyReminder =
@@ -349,15 +367,18 @@ export function AccountabilityApp() {
     ) : (
       <IconChevronDown className="h-5 w-5" />
     );
+  const isLoading = todaysList === undefined;
+
   const actionButtons = (
     <>
       {/* Mark Completed and Copy buttons row */}
-      {(!isCompleted && items.length > 0) || (isCompleted || items.length > 0) ? (
+      {(!isCompleted && items.length > 0) || (isCompleted || items.length > 0) || isLoading ? (
         <div className="flex gap-2">
           {/* Mark Completed Button - Only show in draft mode */}
-          {!isCompleted && items.length > 0 && (
+          {!isCompleted && (
             <Button
               onClick={handleMarkCompleted}
+              disabled={isLoading || items.length === 0}
               className="h-10 flex-1 rounded-xl text-sm shadow-sm"
             >
               <IconCheck className="mr-1.5 h-4 w-4" />
@@ -369,6 +390,7 @@ export function AccountabilityApp() {
           {isCompleted && (
             <Button
               onClick={handleRevertToDraft}
+              disabled={isLoading}
               variant="secondary"
               className="h-10 flex-1 rounded-xl border border-amber-300/70 bg-amber-100/70 text-amber-900 hover:bg-amber-200/70 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-200 dark:hover:bg-amber-500/20 text-sm"
             >
@@ -378,9 +400,10 @@ export function AccountabilityApp() {
           )}
 
           {/* Copy Button - Show in completed mode or if there are items */}
-          {(isCompleted || items.length > 0) && (
+          {(isCompleted || items.length > 0 || isLoading) && (
             <Button
               onClick={handleCopy}
+              disabled={isLoading || items.length === 0}
               variant={copied ? "default" : "outline"}
               className="h-10 flex-1 rounded-xl text-sm"
             >
@@ -394,6 +417,7 @@ export function AccountabilityApp() {
       {/* History Button - Full width below */}
       <Button
         onClick={() => setShowHistory(true)}
+        disabled={isLoading}
         variant="ghost"
         className="h-10 w-full rounded-xl text-sm"
       >
@@ -437,8 +461,15 @@ export function AccountabilityApp() {
           <div className="grid h-full gap-5 lg:grid-cols-[minmax(0,1fr)_19.5rem]">
             <div className="min-w-0 space-y-4">
               {/* 7-Day Reminder Banner */}
-              {showWeeklyReminder && (
-                <Card className="elevated-card border-amber-300/80 bg-gradient-to-r from-amber-50/95 via-amber-50/85 to-orange-50/90">
+              <AnimatePresence>
+                {showWeeklyReminder && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                  >
+                    <Card className="elevated-card border-amber-300/80 bg-gradient-to-r from-amber-50/95 via-amber-50/85 to-orange-50/90">
                   <CardContent className="p-3.5 sm:p-5">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex-1 min-w-0">
@@ -458,10 +489,12 @@ export function AccountabilityApp() {
                       >
                         Update Now
                       </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               )}
+            </AnimatePresence>
 
               {/* Add Item Section - Only show in draft mode */}
               {!isCompleted && (
@@ -552,18 +585,38 @@ export function AccountabilityApp() {
               )}
 
               {/* Items List */}
-              {items.length === 0 ? (
-                <Card className="elevated-card">
-                  <CardContent className="flex items-center justify-center py-10 sm:py-14">
-                    <p className="text-center text-muted-foreground text-sm">
-                      No items yet. Add your first item to get started!
-                    </p>
-                  </CardContent>
-                </Card>
+              {todaysList === undefined ? (
+                <TaskSkeleton />
+              ) : items.length === 0 ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Card className="elevated-card">
+                    <CardContent className="flex items-center justify-center py-10 sm:py-14">
+                      <p className="text-center text-muted-foreground text-sm">
+                        No items yet. Add your first item to get started!
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               ) : (
                 <div className="space-y-3">
-                  {items.map((item, index) => (
-                    <Card
+                  <AnimatePresence mode="popLayout">
+                    {items.map((item, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: -100, scale: 0.95 }}
+                        transition={{
+                          duration: 0.2,
+                          delay: index * 0.03
+                        }}
+                        layout
+                      >
+                        <Card
                       key={index}
                       className={`task-card rounded-md transition-colors ${
                         isCompleted
@@ -676,8 +729,16 @@ export function AccountabilityApp() {
                             </div>
 
                             {/* Edit mode panel - Only show when editModeIndex matches */}
-                            {!isCompleted && editModeIndex === index && (
-                              <div className="flex flex-wrap justify-between items-center gap-2 pt-1">
+                            <AnimatePresence>
+                              {!isCompleted && editModeIndex === index && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: "auto", opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                                  className="overflow-hidden"
+                                >
+                                  <div className="flex flex-wrap justify-between items-center gap-2 pt-1">
                                 {/* Section selector */}
                                 <Select
                                   value={item.section || "none"}
@@ -741,14 +802,23 @@ export function AccountabilityApp() {
                                   className="h-7 rounded-full px-3 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/30"
                                 >
                                   <IconTrash className="mr-1 h-3 w-3" />
-                                  <span className="text-[10px] font-medium">Delete</span>
-                                </Button>
-                              </div>
+                                    <span className="text-[10px] font-medium">Delete</span>
+                                  </Button>
+                                </div>
+                              </motion.div>
                             )}
+                          </AnimatePresence>
 
                             {/* Emoji Selection - Only in completed mode */}
-                            {isCompleted && (
-                              <div className="mt-1 space-y-3">
+                            <AnimatePresence>
+                              {isCompleted && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: "auto", opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{ duration: 0.25, ease: "easeInOut" }}
+                                  className="mt-1 space-y-3 overflow-hidden"
+                                >
                                 <div className="flex gap-2.5">
                                   <Button
                                     size="lg"
@@ -809,13 +879,16 @@ export function AccountabilityApp() {
                                     className="min-h-20 rounded-2xl border-border/75 bg-background/70 text-sm resize-none"
                                   />
                                 )}
-                              </div>
-                            )}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </div>
                         )}
                       </CardContent>
-                    </Card>
-                  ))}
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
                 </div>
               )}
             </div>

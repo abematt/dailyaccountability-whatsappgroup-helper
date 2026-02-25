@@ -13,6 +13,7 @@ import {
 } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 import type { UserId } from "./UserPicker";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface HistoryViewProps {
   userId: UserId;
@@ -193,11 +194,17 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
                   </div>
                 ) : (
                   <div className="space-y-2.5">
-                    {historyLists.map((list) => (
-                      <button
-                        key={list._id}
-                        onClick={() => setSelectedDate(list.date)}
-                        className={`elevated-card w-full text-left flex items-center justify-between rounded-2xl p-4 transition-all ${
+                    <AnimatePresence mode="popLayout">
+                      {historyLists.map((list, index) => (
+                        <motion.button
+                          key={list._id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 20 }}
+                          transition={{ duration: 0.2, delay: index * 0.05 }}
+                          layout
+                          onClick={() => setSelectedDate(list.date)}
+                          className={`elevated-card w-full text-left flex items-center justify-between rounded-2xl p-4 transition-all ${
                           selectedDate === list.date
                             ? "border-primary/55 bg-primary/10"
                             : "hover:-translate-y-0.5 hover:border-primary/35"
@@ -208,10 +215,11 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
                           variant={list.status === "completed" ? "default" : "secondary"}
                           className={selectedDate === list.date ? "bg-primary text-primary-foreground" : ""}
                         >
-                          {list.items.length}
-                        </Badge>
-                      </button>
-                    ))}
+                            {list.items.length}
+                          </Badge>
+                        </motion.button>
+                      ))}
+                    </AnimatePresence>
                   </div>
                 )}
               </div>
@@ -267,12 +275,27 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
                     </div>
                   </div>
 
-                  {!editMode ? (
-                    <>
-                      {/* View Mode */}
-                      <div className="space-y-3.5">
-                        {selectedList.items.map((item, index) => (
-                          <Card key={index} className="task-card">
+                  <AnimatePresence mode="wait">
+                    {!editMode ? (
+                      <motion.div
+                        key="view-mode"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {/* View Mode */}
+                        <div className="space-y-3.5">
+                          <AnimatePresence mode="popLayout">
+                            {selectedList.items.map((item, index) => (
+                              <motion.div
+                                key={index}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.2, delay: index * 0.05 }}
+                                layout
+                              >
+                                <Card className="task-card">
                             <CardContent className="px-3 py-2.5 sm:px-3.5 sm:py-2.5">
                               <div className="task-row">
                                 <div className="flex-1 min-w-0">
@@ -300,23 +323,31 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
                                     </div>
                                   )}
                                 </div>
-                              </div>
-                            </CardContent>
-                          </Card>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </motion.div>
                         ))}
-                      </div>
+                      </AnimatePresence>
+                    </div>
 
-                      <div className="space-y-2.5">
-                        <Button onClick={handleCopy} variant="outline" size="lg" className="h-12 w-full rounded-2xl text-base">
-                          <IconCopy className="mr-2 h-5 w-5" />
-                          {copied ? "Copied!" : "Copy for WhatsApp"}
-                        </Button>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      {/* Edit Mode */}
-                      <div className="space-y-3">
+                    <div className="space-y-2.5">
+                      <Button onClick={handleCopy} variant="outline" size="lg" className="h-12 w-full rounded-2xl text-base">
+                        <IconCopy className="mr-2 h-5 w-5" />
+                        {copied ? "Copied!" : "Copy for WhatsApp"}
+                      </Button>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="edit-mode"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {/* Edit Mode */}
+                    <div className="space-y-3">
                         {editingItems.map((item, index) => (
                           <Card
                             key={index}
@@ -412,14 +443,15 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
                           </Button>
                         )}
 
-                        <Button onClick={handleCopy} variant="outline" size="lg" className="h-12 w-full rounded-2xl text-base">
-                          <IconCopy className="mr-2 h-5 w-5" />
-                          {copied ? "Copied!" : "Copy for WhatsApp"}
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </div>
+                      <Button onClick={handleCopy} variant="outline" size="lg" className="h-12 w-full rounded-2xl text-base">
+                        <IconCopy className="mr-2 h-5 w-5" />
+                        {copied ? "Copied!" : "Copy for WhatsApp"}
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
               ) : (
                 <div className="p-8 text-center">
                   <p className="text-muted-foreground text-sm">

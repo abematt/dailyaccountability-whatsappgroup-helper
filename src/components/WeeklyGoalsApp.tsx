@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { WeeklyHistoryView } from "./WeeklyHistoryView";
 import { UserAvatar } from "./UserAvatar";
 import type { UserId } from "./UserPicker";
+import { motion, AnimatePresence } from "framer-motion";
+import { TaskSkeleton } from "@/components/ui/skeleton";
 
 type EmojiType = "green" | "yellow" | "red" | null;
 
@@ -57,6 +59,7 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
   }, [weeklyGoals]);
 
   const isCompleted = weeklyGoals?.status === "completed";
+  const isLoading = weeklyGoals === undefined;
 
   // Format week display
   const formatWeekDisplay = () => {
@@ -202,7 +205,16 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
   };
 
   if (showHistory) {
-    return <WeeklyHistoryView userId={userId} onBack={() => setShowHistory(false)} />;
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ duration: 0.2 }}
+      >
+        <WeeklyHistoryView userId={userId} onBack={() => setShowHistory(false)} />
+      </motion.div>
+    );
   }
 
   return (
@@ -237,12 +249,11 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
         </div>
 
         {/* Content Area - Scrollable */}
-        <div className="app-content space-y-4">
-          {/* Add Item Section - Only show in draft mode */}
-          {!isCompleted && (
-            <Card className="elevated-card">
-              <CardContent className="space-y-2.5 p-3.5 sm:p-5">
-                {/* Add Item Input */}
+        <div className="app-content">
+          <div className="space-y-4">
+            {/* Add Item Section - Only show in draft mode */}
+            {!isCompleted && (
+              <div className="px-0 py-1 sm:px-3.5 sm:py-2.5">
                 <div className="flex items-center gap-2.5">
                   <Input
                     placeholder="Type your goal here..."
@@ -251,7 +262,7 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
                     onKeyDown={(e) =>
                       e.key === "Enter" && hasNewItemText && handleAddItem()
                     }
-                    className="h-11 rounded-2xl border-border/75 bg-background/75 text-base"
+                    className="h-11 flex-1 rounded-lg border-border/75 bg-background/75 text-base"
                   />
                   <Button
                     onClick={handleAddItem}
@@ -262,26 +273,55 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
                     <IconPlus className="h-5 w-5" />
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              </div>
+            )}
 
-          {/* Items List */}
-          {items.length === 0 ? (
-            <Card className="elevated-card">
-              <CardContent className="flex items-center justify-center py-10 sm:py-14">
-                <p className="text-center text-muted-foreground text-sm">
-                  No goals yet. Add your first goal to get started!
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-3">
-              {items.map((item, index) => (
-                <Card
-                  key={index}
-                  className={`task-card transition-colors ${isCompleted ? getItemAccentClass(item.emoji) : ""}`}
-                >
+            {!isCompleted && (
+              <div className="px-0 sm:px-3.5">
+                <div className="flex items-center gap-4">
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent to-border/60"></div>
+                  <h2 className="text-xl font-extrabold tracking-wide uppercase text-muted-foreground/70 shrink-0 whitespace-nowrap" style={{ fontFamily: 'Inter, -apple-system, system-ui, sans-serif', fontWeight: '800' }}>Task List</h2>
+                  <div className="h-px flex-1 bg-gradient-to-l from-transparent to-border/60"></div>
+                </div>
+              </div>
+            )}
+
+            {/* Items List */}
+            {weeklyGoals === undefined ? (
+              <TaskSkeleton />
+            ) : items.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card className="elevated-card">
+                  <CardContent className="flex items-center justify-center py-10 sm:py-14">
+                    <p className="text-center text-muted-foreground text-sm">
+                      No goals yet. Add your first goal to get started!
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ) : (
+              <div className="space-y-3">
+              <AnimatePresence mode="popLayout">
+                {items.map((item, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: -100, scale: 0.95 }}
+                    transition={{
+                      duration: 0.2,
+                      delay: index * 0.03
+                    }}
+                    layout
+                  >
+                    <Card
+                      key={index}
+                      className={`task-card rounded-md transition-colors ${isCompleted ? getItemAccentClass(item.emoji) : ""}`}
+                    >
                   <CardContent className="px-3 py-2.5 sm:px-3.5 sm:py-3">
                     {editingIndex === index ? (
                       <div className="flex items-center gap-2.5">
@@ -349,8 +389,16 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
                         </div>
 
                         {/* Edit mode panel - Only show when editModeIndex matches */}
-                        {!isCompleted && editModeIndex === index && (
-                          <div className="flex flex-wrap items-center gap-2 pt-1">
+                        <AnimatePresence>
+                          {!isCompleted && editModeIndex === index && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2, ease: "easeInOut" }}
+                              className="overflow-hidden"
+                            >
+                              <div className="flex flex-wrap items-center gap-2 pt-1">
                             {/* Edit and delete actions */}
                             <Button
                               size="sm"
@@ -368,14 +416,23 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
                               className="h-7 rounded-full px-3 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/30"
                             >
                               <IconTrash className="mr-1 h-3 w-3" />
-                              <span className="text-[10px] font-medium">Delete</span>
-                            </Button>
-                          </div>
+                                <span className="text-[10px] font-medium">Delete</span>
+                              </Button>
+                            </div>
+                          </motion.div>
                         )}
+                      </AnimatePresence>
 
                         {/* Emoji Selection - Only in completed mode */}
-                        {isCompleted && (
-                          <div className="mt-1 space-y-3">
+                        <AnimatePresence>
+                          {isCompleted && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.25, ease: "easeInOut" }}
+                              className="mt-1 space-y-3 overflow-hidden"
+                            >
                             <div className="flex gap-2.5">
                               <Button
                                 size="lg"
@@ -415,25 +472,33 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
                                 className="min-h-20 rounded-2xl border-border/75 bg-background/70 text-sm resize-none"
                               />
                             )}
-                          </div>
-                        )}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     )}
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               ))}
-            </div>
-          )}
+            </AnimatePresence>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Footer Actions - Fixed */}
         <div className="app-footer space-y-2 shrink-0">
           {/* Mark Completed and Copy buttons row */}
-          {(!isCompleted && items.length > 0) || (isCompleted || items.length > 0) ? (
+          {(!isCompleted && items.length > 0) || (isCompleted || items.length > 0) || isLoading ? (
             <div className="flex gap-2">
               {/* Mark Completed Button - Only show in draft mode */}
-              {!isCompleted && items.length > 0 && (
-                <Button onClick={handleMarkCompleted} className="h-10 flex-1 rounded-xl text-sm shadow-sm">
+              {!isCompleted && (
+                <Button
+                  onClick={handleMarkCompleted}
+                  disabled={isLoading || items.length === 0}
+                  className="h-10 flex-1 rounded-xl text-sm shadow-sm"
+                >
                   <IconCheck className="mr-1.5 h-4 w-4" />
                   Mark Complete
                 </Button>
@@ -443,6 +508,7 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
               {isCompleted && (
                 <Button
                   onClick={handleRevertToDraft}
+                  disabled={isLoading}
                   variant="secondary"
                   className="h-10 flex-1 rounded-xl border border-amber-300/70 bg-amber-100/70 text-amber-900 hover:bg-amber-200/70 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-200 dark:hover:bg-amber-500/20 text-sm"
                 >
@@ -452,9 +518,10 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
               )}
 
               {/* Copy Button - Show in completed mode or if there are items */}
-              {(isCompleted || items.length > 0) && (
+              {(isCompleted || items.length > 0 || isLoading) && (
                 <Button
                   onClick={handleCopy}
+                  disabled={isLoading || items.length === 0}
                   variant={copied ? "default" : "outline"}
                   className="h-10 flex-1 rounded-xl text-sm"
                 >
@@ -468,6 +535,7 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
           {/* History Button - Full width below */}
           <Button
             onClick={() => setShowHistory(true)}
+            disabled={isLoading}
             variant="ghost"
             className="h-10 w-full rounded-xl text-sm"
           >
