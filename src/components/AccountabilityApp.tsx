@@ -67,6 +67,12 @@ export function AccountabilityApp() {
     api.weeklyGoals.getDaysSinceLastUpdate,
     userId ? { userId } : "skip",
   );
+
+  // Preload weekly goals data for smooth transitions
+  useQuery(
+    api.weeklyGoals.getCurrentWeekGoals,
+    userId ? { userId } : "skip",
+  );
   const initializeTodaysList = useMutation(api.dailyLists.initializeTodaysList);
   const upsertList = useMutation(api.dailyLists.upsertTodaysList);
   const markCompleted = useMutation(api.dailyLists.markTodaysListCompleted);
@@ -332,29 +338,11 @@ export function AccountabilityApp() {
   }
 
   if (showWeekly) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        transition={{ duration: 0.2 }}
-      >
-        <WeeklyGoalsApp userId={userId} onBack={() => setShowWeekly(false)} />
-      </motion.div>
-    );
+    return <WeeklyGoalsApp userId={userId} onBack={() => setShowWeekly(false)} />;
   }
 
   if (showHistory) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        transition={{ duration: 0.2 }}
-      >
-        <HistoryView userId={userId} onBack={() => setShowHistory(false)} />
-      </motion.div>
-    );
+    return <HistoryView userId={userId} onBack={() => setShowHistory(false)} />;
   }
 
   const showWeeklyReminder =
