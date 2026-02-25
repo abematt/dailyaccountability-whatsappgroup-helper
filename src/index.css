@@ -158,11 +158,18 @@
   }
 
   .elevated-card {
-    @apply border border-border/80 bg-card shadow-[0_8px_18px_-20px_rgba(0,0,0,0.45)];
+    @apply border border-border/70 bg-card/95
+           shadow-[0_8px_18px_-4px_rgba(0,0,0,0.1)]
+           dark:bg-card/80 dark:shadow-[0_8px_18px_-4px_rgba(0,0,0,0.4)];
   }
 
   .task-card {
-    @apply border border-border/60 bg-muted/45 shadow-none rounded-[1.05rem];
+    @apply border border-border/70 bg-card/90 rounded-[1.15rem]
+           shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)]
+           transition-shadow duration-200
+           hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)]
+           dark:bg-card/50 dark:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.3)]
+           dark:hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.4)];
   }
 
   .task-row {
@@ -170,6 +177,6 @@
   }
 
   .task-text {
-    @apply text-[15px] leading-5 wrap-break-word flex-1 min-w-0;
+    @apply text-[15px] font-semibold leading-[1.4] wrap-break-word flex-1 min-w-0 text-foreground;
   }
 }

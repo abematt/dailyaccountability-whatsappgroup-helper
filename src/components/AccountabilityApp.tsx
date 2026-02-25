@@ -351,52 +351,53 @@ export function AccountabilityApp() {
     );
   const actionButtons = (
     <>
-      {/* Mark Completed Button - Only show in draft mode */}
-      {!isCompleted && items.length > 0 && (
-        <Button
-          onClick={handleMarkCompleted}
-          className="h-12 w-full rounded-2xl text-base shadow-sm"
-          size="lg"
-        >
-          <IconCheck className="mr-2 h-5 w-5" />
-          Mark Day Completed
-        </Button>
-      )}
+      {/* Mark Completed and Copy buttons row */}
+      {(!isCompleted && items.length > 0) || (isCompleted || items.length > 0) ? (
+        <div className="flex gap-2">
+          {/* Mark Completed Button - Only show in draft mode */}
+          {!isCompleted && items.length > 0 && (
+            <Button
+              onClick={handleMarkCompleted}
+              className="h-10 flex-1 rounded-xl text-sm shadow-sm"
+            >
+              <IconCheck className="mr-1.5 h-4 w-4" />
+              Mark Complete
+            </Button>
+          )}
 
-      {/* Revert to Draft Button - Only show in completed mode */}
-      {isCompleted && (
-        <Button
-          onClick={handleRevertToDraft}
-          variant="secondary"
-          className="h-12 w-full rounded-2xl border border-amber-300/70 bg-amber-100/70 text-amber-900 hover:bg-amber-200/70 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-200 dark:hover:bg-amber-500/20 text-base"
-          size="lg"
-        >
-          <IconX className="mr-2 h-5 w-5" />
-          Back to Goals
-        </Button>
-      )}
+          {/* Revert to Draft Button - Only show in completed mode */}
+          {isCompleted && (
+            <Button
+              onClick={handleRevertToDraft}
+              variant="secondary"
+              className="h-10 flex-1 rounded-xl border border-amber-300/70 bg-amber-100/70 text-amber-900 hover:bg-amber-200/70 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-200 dark:hover:bg-amber-500/20 text-sm"
+            >
+              <IconX className="mr-1.5 h-4 w-4" />
+              Back to Goals
+            </Button>
+          )}
 
-      {/* Copy Button - Show in completed mode or if there are items */}
-      {(isCompleted || items.length > 0) && (
-        <Button
-          onClick={handleCopy}
-          variant={copied ? "default" : "outline"}
-          className="h-12 w-full rounded-2xl text-base"
-          size="lg"
-        >
-          <IconCopy className="mr-2 h-5 w-5" />
-          {copied ? "Copied!" : "Copy for WhatsApp"}
-        </Button>
-      )}
+          {/* Copy Button - Show in completed mode or if there are items */}
+          {(isCompleted || items.length > 0) && (
+            <Button
+              onClick={handleCopy}
+              variant={copied ? "default" : "outline"}
+              className="h-10 flex-1 rounded-xl text-sm"
+            >
+              <IconCopy className="mr-1.5 h-4 w-4" />
+              {copied ? "Copied!" : "Copy"}
+            </Button>
+          )}
+        </div>
+      ) : null}
 
-      {/* History Button */}
+      {/* History Button - Full width below */}
       <Button
         onClick={() => setShowHistory(true)}
         variant="ghost"
-        className="h-12 w-full rounded-2xl text-base"
-        size="lg"
+        className="h-10 w-full rounded-xl text-sm"
       >
-        <IconHistory className="mr-2 h-5 w-5" />
+        <IconHistory className="mr-1.5 h-4 w-4" />
         View Previous Days
       </Button>
     </>
@@ -408,18 +409,10 @@ export function AccountabilityApp() {
         {/* Header - Fixed */}
         <div className="app-header shrink-0">
           <div className="flex items-center justify-between">
-            <h1 className="text-[1.28rem] font-semibold tracking-tight text-balance">
+            <h1 className="text-xl font-extrabold tracking-wide uppercase text-foreground/80 whitespace-nowrap" style={{ fontFamily: 'Inter, -apple-system, system-ui, sans-serif', fontWeight: '800' }}>
               Today's Goals
             </h1>
             <div className="flex items-center gap-2 shrink-0">
-              {todaysList?.status && (
-                <Badge
-                  variant={isCompleted ? "default" : "secondary"}
-                  className="h-6 px-2.5 text-[11px] font-semibold uppercase tracking-wide"
-                >
-                  {isCompleted ? "Completed" : "In Progress"}
-                </Badge>
-              )}
               <Button
                 size="icon"
                 variant="ghost"
@@ -433,10 +426,10 @@ export function AccountabilityApp() {
             </div>
           </div>
 
-          <p className="mt-1 text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">{todayWeekday}</span>{" "}
-            {todayDayMonthYear}
-          </p>
+          <div className="mt-1 flex items-center justify-between text-sm">
+            <span className="font-semibold text-foreground">{todayWeekday}</span>
+            <span className="text-muted-foreground">{todayDayMonthYear}</span>
+          </div>
         </div>
 
         {/* Content Area - Scrollable */}
@@ -548,9 +541,15 @@ export function AccountabilityApp() {
                 </div>
               )}
 
-              <div className="px-0 sm:px-3.5">
-                <h2 className="text-sm font-semibold tracking-tight">Task List</h2>
-              </div>
+              {!isCompleted && (
+                <div className="px-0 sm:px-3.5">
+                  <div className="flex items-center gap-4">
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent to-border/60"></div>
+                    <h2 className="text-xl font-extrabold tracking-wide uppercase text-muted-foreground/70 shrink-0 whitespace-nowrap" style={{ fontFamily: 'Inter, -apple-system, system-ui, sans-serif', fontWeight: '800' }}>Task List</h2>
+                    <div className="h-px flex-1 bg-gradient-to-l from-transparent to-border/60"></div>
+                  </div>
+                </div>
+              )}
 
               {/* Items List */}
               {items.length === 0 ? (
@@ -574,7 +573,7 @@ export function AccountabilityApp() {
                             : ""
                       }`}
                     >
-                      <CardContent className="px-3.5 py-3 sm:px-4 sm:py-3.5">
+                      <CardContent className="px-3 py-2.5 sm:px-3.5 sm:py-3">
                         {editingIndex === index ? (
                           <div className="flex items-center gap-2.5">
                             <Input
@@ -609,9 +608,9 @@ export function AccountabilityApp() {
                             </Button>
                           </div>
                         ) : (
-                          <div className="space-y-2.5">
+                          <div className="space-y-2">
                             {/* Text and section row */}
-                            <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start justify-between gap-2.5">
                               <div className="flex-1 min-w-0">
                                 <p className="task-text">{item.text}</p>
 

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { IconPlus, IconTrash, IconCheck, IconCopy, IconHistory, IconPencil, IconX, IconArrowLeft } from "@tabler/icons-react";
+import { IconPlus, IconTrash, IconCheck, IconCopy, IconHistory, IconPencil, IconX, IconArrowLeft, IconRefresh } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 import { WeeklyHistoryView } from "./WeeklyHistoryView";
 import { UserAvatar } from "./UserAvatar";
@@ -207,8 +207,6 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
 
   return (
     <div className="app-shell">
-      {/* User Avatar Badge */}
-      <UserAvatar userId={userId} />
       <div className="app-frame">
         {/* Header - Fixed */}
         <div className="app-header shrink-0">
@@ -221,21 +219,21 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
             >
               <IconArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="truncate text-base font-semibold tracking-tight">
+            <h1 className="text-xl font-extrabold tracking-wide uppercase text-foreground/80 whitespace-nowrap" style={{ fontFamily: 'Inter, -apple-system, system-ui, sans-serif', fontWeight: '800' }}>
               {weeklyGoals ? `Week ${weeklyGoals.weekNumber}` : "Week"}
             </h1>
             <div className="ml-auto flex items-center gap-2 shrink-0">
-              {weeklyGoals?.status && (
-                <Badge variant={isCompleted ? "default" : "secondary"} className="h-6 px-2.5 text-[11px] font-semibold uppercase tracking-wide">
-                  {isCompleted ? "Completed" : "In Progress"}
-                </Badge>
-              )}
               <UserAvatar userId={userId} inline />
             </div>
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {weeklyGoals ? formatWeekRange() : ""}
-          </p>
+          <div className="mt-1 flex items-center justify-between text-sm">
+            <span className="font-semibold text-foreground">
+              {weeklyGoals ? `Week ${weeklyGoals.weekNumber}` : ""}
+            </span>
+            <span className="text-muted-foreground">
+              {weeklyGoals ? formatWeekRange() : ""}
+            </span>
+          </div>
         </div>
 
         {/* Content Area - Scrollable */}
@@ -284,7 +282,7 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
                   key={index}
                   className={`task-card transition-colors ${isCompleted ? getItemAccentClass(item.emoji) : ""}`}
                 >
-                  <CardContent className="px-3.5 py-3 sm:px-4 sm:py-3.5">
+                  <CardContent className="px-3 py-2.5 sm:px-3.5 sm:py-3">
                     {editingIndex === index ? (
                       <div className="flex items-center gap-2.5">
                         <Input
@@ -315,26 +313,27 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
                         </Button>
                       </div>
                     ) : (
-                      <div className="space-y-2.5">
+                      <div className="space-y-2">
                         {/* Text and badges row */}
-                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start justify-between gap-2.5">
                           <div className="flex-1 min-w-0">
                             <p className="task-text">{item.text}</p>
-
-                            {/* Carried Over badge */}
-                            {item.carriedOver && (
-                              <Badge
-                                variant="outline"
-                                className="mt-2 inline-flex h-5 shrink-0 border-amber-300 bg-amber-50/90 text-[10px] font-semibold uppercase tracking-wide text-amber-700"
-                              >
-                                Carried Over
-                              </Badge>
-                            )}
                           </div>
 
                           {/* Always visible action - Only in draft mode */}
                           {!isCompleted && (
                             <div className="flex shrink-0 items-center gap-2">
+                              {/* Carried Over badge */}
+                              {item.carriedOver && (
+                                <Badge
+                                  variant="outline"
+                                  className="inline-flex h-5 w-5 shrink-0 items-center justify-center border-amber-300 bg-amber-50/90 p-0 text-amber-700"
+                                  title="Carried over from previous week"
+                                >
+                                  <IconRefresh className="h-3 w-3" />
+                                </Badge>
+                              )}
+
                               {/* Edit mode toggle */}
                               <Button
                                 size="icon"
@@ -428,49 +427,51 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
         </div>
 
         {/* Footer Actions - Fixed */}
-        <div className="app-footer space-y-2.5 shrink-0">
-          {/* Mark Completed Button - Only show in draft mode */}
-          {!isCompleted && items.length > 0 && (
-            <Button onClick={handleMarkCompleted} className="h-12 w-full rounded-2xl text-base shadow-sm" size="lg">
-              <IconCheck className="mr-2 h-5 w-5" />
-              Mark Week Completed
-            </Button>
-          )}
+        <div className="app-footer space-y-2 shrink-0">
+          {/* Mark Completed and Copy buttons row */}
+          {(!isCompleted && items.length > 0) || (isCompleted || items.length > 0) ? (
+            <div className="flex gap-2">
+              {/* Mark Completed Button - Only show in draft mode */}
+              {!isCompleted && items.length > 0 && (
+                <Button onClick={handleMarkCompleted} className="h-10 flex-1 rounded-xl text-sm shadow-sm">
+                  <IconCheck className="mr-1.5 h-4 w-4" />
+                  Mark Complete
+                </Button>
+              )}
 
-          {/* Revert to Draft Button - Only show in completed mode */}
-          {isCompleted && (
-            <Button
-              onClick={handleRevertToDraft}
-              variant="secondary"
-              className="h-12 w-full rounded-2xl border border-amber-300/70 bg-amber-100/70 text-amber-900 hover:bg-amber-200/70 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-200 dark:hover:bg-amber-500/20 text-base"
-              size="lg"
-            >
-              <IconX className="mr-2 h-5 w-5" />
-              Back to Goals
-            </Button>
-          )}
+              {/* Revert to Draft Button - Only show in completed mode */}
+              {isCompleted && (
+                <Button
+                  onClick={handleRevertToDraft}
+                  variant="secondary"
+                  className="h-10 flex-1 rounded-xl border border-amber-300/70 bg-amber-100/70 text-amber-900 hover:bg-amber-200/70 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-200 dark:hover:bg-amber-500/20 text-sm"
+                >
+                  <IconX className="mr-1.5 h-4 w-4" />
+                  Back to Goals
+                </Button>
+              )}
 
-          {/* Copy Button - Show in completed mode or if there are items */}
-          {(isCompleted || items.length > 0) && (
-            <Button
-              onClick={handleCopy}
-              variant={copied ? "default" : "outline"}
-              className="h-12 w-full rounded-2xl text-base"
-              size="lg"
-            >
-              <IconCopy className="mr-2 h-5 w-5" />
-              {copied ? "Copied!" : "Copy for WhatsApp"}
-            </Button>
-          )}
+              {/* Copy Button - Show in completed mode or if there are items */}
+              {(isCompleted || items.length > 0) && (
+                <Button
+                  onClick={handleCopy}
+                  variant={copied ? "default" : "outline"}
+                  className="h-10 flex-1 rounded-xl text-sm"
+                >
+                  <IconCopy className="mr-1.5 h-4 w-4" />
+                  {copied ? "Copied!" : "Copy"}
+                </Button>
+              )}
+            </div>
+          ) : null}
 
-          {/* History Button */}
+          {/* History Button - Full width below */}
           <Button
             onClick={() => setShowHistory(true)}
             variant="ghost"
-            className="h-12 w-full rounded-2xl text-base"
-            size="lg"
+            className="h-10 w-full rounded-xl text-sm"
           >
-            <IconHistory className="mr-2 h-5 w-5" />
+            <IconHistory className="mr-1.5 h-4 w-4" />
             View Previous Weeks
           </Button>
         </div>
