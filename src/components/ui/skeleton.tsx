@@ -1,9 +1,10 @@
 import { motion } from "framer-motion";
 
-export function Skeleton({
-  className = "",
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+interface SkeletonProps {
+  className?: string;
+}
+
+export function Skeleton({ className = "" }: SkeletonProps) {
   return (
     <motion.div
       animate={{
@@ -15,7 +16,6 @@ export function Skeleton({
         ease: "easeInOut",
       }}
       className={`rounded-md bg-muted/50 ${className}`}
-      {...props}
     />
   );
 }
