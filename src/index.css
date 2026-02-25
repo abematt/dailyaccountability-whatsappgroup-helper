@@ -166,10 +166,10 @@
   }
 
   .task-row {
-    @apply flex min-h-10 items-center gap-2.5;
+    @apply flex flex-col gap-2.5 sm:flex-row sm:items-center;
   }
 
   .task-text {
-    @apply text-[15px] leading-5 wrap-break-word;
+    @apply text-[15px] leading-5 wrap-break-word flex-1 min-w-0;
   }
 }

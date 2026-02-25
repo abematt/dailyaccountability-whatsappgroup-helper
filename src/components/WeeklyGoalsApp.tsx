@@ -39,6 +39,7 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
   const [showHistory, setShowHistory] = React.useState(false);
   const [editingIndex, setEditingIndex] = React.useState<number | null>(null);
   const [editingText, setEditingText] = React.useState("");
+  const [editModeIndex, setEditModeIndex] = React.useState<number | null>(null);
   const hasNewItemText = newItemText.trim().length > 0;
 
   // Initialize week if it doesn't exist
@@ -100,6 +101,10 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
     upsertGoals({ userId, items: newItems, status: weeklyGoals?.status || "draft" });
   };
 
+  const handleToggleEditMode = (index: number) => {
+    setEditModeIndex(editModeIndex === index ? null : index);
+  };
+
   const handleEditItem = (index: number) => {
     setEditingIndex(index);
     setEditingText(items[index].text);
@@ -114,6 +119,7 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
     }
     setEditingIndex(null);
     setEditingText("");
+    setEditModeIndex(null);
   };
 
   const handleCancelEdit = () => {
@@ -279,54 +285,98 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
                   className={`task-card transition-colors ${isCompleted ? getItemAccentClass(item.emoji) : ""}`}
                 >
                   <CardContent className="px-3.5 py-3 sm:px-4 sm:py-3.5">
-                    <div className="task-row">
-                      <div className="flex-1 min-w-0">
-                        {editingIndex === index ? (
-                          <div className="task-row">
-                            <Input
-                              value={editingText}
-                              onChange={(e) => setEditingText(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") handleSaveEdit(index);
-                                if (e.key === "Escape") handleCancelEdit();
-                              }}
-                              autoFocus
-                              className="h-10 rounded-xl border-border/75 bg-background/75 text-base"
-                            />
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => handleSaveEdit(index)}
-                              className="h-9 w-9 shrink-0 rounded-xl"
-                            >
-                              <IconCheck className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={handleCancelEdit}
-                              className="h-9 w-9 shrink-0 rounded-xl"
-                            >
-                              <IconX className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="task-row">
+                    {editingIndex === index ? (
+                      <div className="flex items-center gap-2.5">
+                        <Input
+                          value={editingText}
+                          onChange={(e) => setEditingText(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleSaveEdit(index);
+                            if (e.key === "Escape") handleCancelEdit();
+                          }}
+                          autoFocus
+                          className="h-10 flex-1 rounded-xl border-border/75 bg-background/75 text-base"
+                        />
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleSaveEdit(index)}
+                          className="h-9 w-9 shrink-0 rounded-xl"
+                        >
+                          <IconCheck className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={handleCancelEdit}
+                          className="h-9 w-9 shrink-0 rounded-xl"
+                        >
+                          <IconX className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2.5">
+                        {/* Text and badges row */}
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
                             <p className="task-text">{item.text}</p>
+
+                            {/* Carried Over badge */}
                             {item.carriedOver && (
                               <Badge
                                 variant="outline"
-                                className="h-5 shrink-0 border-amber-300 bg-amber-50/90 text-[10px] font-semibold uppercase tracking-wide text-amber-700"
+                                className="mt-2 inline-flex h-5 shrink-0 border-amber-300 bg-amber-50/90 text-[10px] font-semibold uppercase tracking-wide text-amber-700"
                               >
                                 Carried Over
                               </Badge>
                             )}
                           </div>
+
+                          {/* Always visible action - Only in draft mode */}
+                          {!isCompleted && (
+                            <div className="flex shrink-0 items-center gap-2">
+                              {/* Edit mode toggle */}
+                              <Button
+                                size="icon"
+                                variant={editModeIndex === index ? "secondary" : "ghost"}
+                                onClick={() => handleToggleEditMode(index)}
+                                className="h-8 w-8 rounded-xl"
+                                title="Edit options"
+                              >
+                                <IconPencil className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Edit mode panel - Only show when editModeIndex matches */}
+                        {!isCompleted && editModeIndex === index && (
+                          <div className="flex flex-wrap items-center gap-2 pt-1">
+                            {/* Edit and delete actions */}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditItem(index)}
+                              className="h-7 rounded-full px-3"
+                            >
+                              <IconPencil className="mr-1 h-3 w-3" />
+                              <span className="text-[10px] font-medium">Edit</span>
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleRemoveItem(index)}
+                              className="h-7 rounded-full px-3 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/30"
+                            >
+                              <IconTrash className="mr-1 h-3 w-3" />
+                              <span className="text-[10px] font-medium">Delete</span>
+                            </Button>
+                          </div>
                         )}
 
                         {/* Emoji Selection - Only in completed mode */}
                         {isCompleted && (
-                          <div className="mt-3 space-y-3">
+                          <div className="mt-1 space-y-3">
                             <div className="flex gap-2.5">
                               <Button
                                 size="lg"
@@ -369,29 +419,7 @@ export function WeeklyGoalsApp({ userId, onBack }: WeeklyGoalsAppProps) {
                           </div>
                         )}
                       </div>
-
-                      {/* Edit and Remove buttons - Only in draft mode */}
-                      {!isCompleted && editingIndex !== index && (
-                        <div className="flex shrink-0 items-center gap-1.5">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleEditItem(index)}
-                            className="h-9 w-9 rounded-xl"
-                          >
-                            <IconPencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleRemoveItem(index)}
-                            className="h-9 w-9 rounded-xl"
-                          >
-                            <IconTrash className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}

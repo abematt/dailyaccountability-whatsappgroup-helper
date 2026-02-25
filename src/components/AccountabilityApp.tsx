@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
 import {
   IconPlus,
   IconTrash,
@@ -80,6 +79,7 @@ export function AccountabilityApp() {
   const [currentSection, setCurrentSection] = React.useState<SectionType>(null);
   const [editingIndex, setEditingIndex] = React.useState<number | null>(null);
   const [editingText, setEditingText] = React.useState("");
+  const [editModeIndex, setEditModeIndex] = React.useState<number | null>(null);
   const hasNewItemText = newItemText.trim().length > 0;
 
   const handleSelectUser = (selectedUserId: UserId) => {
@@ -147,6 +147,10 @@ export function AccountabilityApp() {
     });
   };
 
+  const handleToggleEditMode = (index: number) => {
+    setEditModeIndex(editModeIndex === index ? null : index);
+  };
+
   const handleEditItem = (index: number) => {
     setEditingIndex(index);
     setEditingText(items[index].text);
@@ -184,6 +188,7 @@ export function AccountabilityApp() {
     }
     setEditingIndex(null);
     setEditingText("");
+    setEditModeIndex(null);
   };
 
   const handleCancelEdit = () => {
@@ -570,110 +575,181 @@ export function AccountabilityApp() {
                       }`}
                     >
                       <CardContent className="px-3.5 py-3 sm:px-4 sm:py-3.5">
-                        <div className="task-row">
-                          <div className="flex-1 min-w-0">
-                            {editingIndex === index ? (
-                              <div className="task-row">
-                                <Input
-                                  value={editingText}
-                                  onChange={(e) =>
-                                    setEditingText(e.target.value)
-                                  }
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter")
-                                      handleSaveEdit(index);
-                                    if (e.key === "Escape")
-                                      handleCancelEdit();
-                                  }}
-                                  autoFocus
-                                  className="h-10 rounded-xl border-border/75 bg-background/75 text-base"
-                                />
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  onClick={() => handleSaveEdit(index)}
-                                  className="h-9 w-9 shrink-0 rounded-xl"
-                                >
-                                  <IconCheck className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  onClick={handleCancelEdit}
-                                  className="h-9 w-9 shrink-0 rounded-xl"
-                                >
-                                  <IconX className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            ) : (
-                              <div className="task-row">
+                        {editingIndex === index ? (
+                          <div className="flex items-center gap-2.5">
+                            <Input
+                              value={editingText}
+                              onChange={(e) =>
+                                setEditingText(e.target.value)
+                              }
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter")
+                                  handleSaveEdit(index);
+                                if (e.key === "Escape")
+                                  handleCancelEdit();
+                              }}
+                              autoFocus
+                              className="h-10 flex-1 rounded-xl border-border/75 bg-background/75 text-base"
+                            />
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => handleSaveEdit(index)}
+                              className="h-9 w-9 shrink-0 rounded-xl"
+                            >
+                              <IconCheck className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={handleCancelEdit}
+                              className="h-9 w-9 shrink-0 rounded-xl"
+                            >
+                              <IconX className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="space-y-2.5">
+                            {/* Text and section row */}
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1 min-w-0">
                                 <p className="task-text">{item.text}</p>
-                                {!isCompleted && (
-                                  <Select
-                                    value={item.section || "none"}
-                                    onValueChange={(value) =>
-                                      handleSectionChange(index, value)
-                                    }
-                                  >
-                                    <SelectTrigger
-                                      className={`h-7 w-auto rounded-full px-2.5 text-[10px] font-semibold uppercase tracking-wide ${
-                                        item.section === "personal"
-                                          ? "border-blue-300 bg-blue-50/80 text-blue-700"
-                                          : item.section === "work"
-                                            ? "border-violet-300 bg-violet-50/80 text-violet-700"
-                                            : "border-border bg-background text-muted-foreground"
-                                      }`}
-                                      aria-label="Edit section"
-                                    >
-                                      <SelectValue placeholder="No Section" />
-                                    </SelectTrigger>
-                                    <SelectContent
-                                      position="popper"
-                                      align="end"
-                                      sideOffset={6}
-                                      className="min-w-36 p-1.5"
-                                    >
-                                      <SelectItem
-                                        value="none"
-                                        className="rounded-lg py-2.5 pl-3.5 pr-8"
-                                      >
-                                        No Section
-                                      </SelectItem>
-                                      <SelectItem
-                                        value="personal"
-                                        className="rounded-lg py-2.5 pl-3.5 pr-8"
-                                      >
-                                        Personal
-                                      </SelectItem>
-                                      <SelectItem
-                                        value="work"
-                                        className="rounded-lg py-2.5 pl-3.5 pr-8"
-                                      >
-                                        Work
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                )}
-                                {isCompleted && item.section && (
+
+                                {/* Section badge - only show when not in edit mode */}
+                                {!isCompleted && item.section && editModeIndex !== index && (
                                   <Badge
                                     variant="outline"
-                                    className={`h-5 shrink-0 text-[10px] font-semibold uppercase tracking-wide ${
+                                    className={`mt-2 inline-flex h-5 shrink-0 text-[10px] font-semibold uppercase tracking-wide ${
                                       item.section === "personal"
                                         ? "border-blue-300 bg-blue-50/80 text-blue-700"
                                         : "border-violet-300 bg-violet-50/80 text-violet-700"
                                     }`}
                                   >
-                                    {item.section === "personal"
-                                      ? "Personal"
-                                      : "Work"}
+                                    {item.section === "personal" ? "Personal" : "Work"}
                                   </Badge>
                                 )}
+
+                                {/* Completed mode section badge */}
+                                {isCompleted && item.section && (
+                                  <Badge
+                                    variant="outline"
+                                    className={`mt-2 inline-flex h-5 shrink-0 text-[10px] font-semibold uppercase tracking-wide ${
+                                      item.section === "personal"
+                                        ? "border-blue-300 bg-blue-50/80 text-blue-700"
+                                        : "border-violet-300 bg-violet-50/80 text-violet-700"
+                                    }`}
+                                  >
+                                    {item.section === "personal" ? "Personal" : "Work"}
+                                  </Badge>
+                                )}
+                              </div>
+
+                              {/* Always visible actions - Only in draft mode */}
+                              {!isCompleted && (
+                                <div className="flex shrink-0 items-center gap-2">
+                                  {/* Quick Complete Button */}
+                                  <Button
+                                    size="icon"
+                                    variant={item.emoji === "green" ? "default" : "ghost"}
+                                    onClick={() => handleQuickComplete(index)}
+                                    className={`h-8 w-8 rounded-xl ${
+                                      item.emoji === "green"
+                                        ? "bg-green-600 hover:bg-green-700 text-white"
+                                        : ""
+                                    }`}
+                                    title="Mark complete"
+                                  >
+                                    <IconCheck className="h-4 w-4" />
+                                  </Button>
+
+                                  {/* Edit mode toggle */}
+                                  <Button
+                                    size="icon"
+                                    variant={editModeIndex === index ? "secondary" : "ghost"}
+                                    onClick={() => handleToggleEditMode(index)}
+                                    className="h-8 w-8 rounded-xl"
+                                    title="Edit options"
+                                  >
+                                    <IconPencil className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Edit mode panel - Only show when editModeIndex matches */}
+                            {!isCompleted && editModeIndex === index && (
+                              <div className="flex flex-wrap justify-between items-center gap-2 pt-1">
+                                {/* Section selector */}
+                                <Select
+                                  value={item.section || "none"}
+                                  onValueChange={(value) =>
+                                    handleSectionChange(index, value)
+                                  }
+                                >
+                                  <SelectTrigger
+                                    className={`h-7 w-auto rounded-full px-2.5 text-[10px] font-semibold uppercase tracking-wide ${
+                                      item.section === "personal"
+                                        ? "border-blue-300 bg-blue-50/80 text-blue-700"
+                                        : item.section === "work"
+                                          ? "border-violet-300 bg-violet-50/80 text-violet-700"
+                                          : "border-border bg-background text-muted-foreground"
+                                    }`}
+                                    aria-label="Edit section"
+                                  >
+                                    <SelectValue placeholder="No Section" />
+                                  </SelectTrigger>
+                                  <SelectContent
+                                    position="popper"
+                                    align="end"
+                                    sideOffset={6}
+                                    className="min-w-36 p-1.5"
+                                  >
+                                    <SelectItem
+                                      value="none"
+                                      className="rounded-lg py-2.5 pl-3.5 pr-8"
+                                    >
+                                      No Section
+                                    </SelectItem>
+                                    <SelectItem
+                                      value="personal"
+                                      className="rounded-lg py-2.5 pl-3.5 pr-8"
+                                    >
+                                      Personal
+                                    </SelectItem>
+                                    <SelectItem
+                                      value="work"
+                                      className="rounded-lg py-2.5 pl-3.5 pr-8"
+                                    >
+                                      Work
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+
+                                {/* Edit and delete actions */}
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleEditItem(index)}
+                                  className="h-7 rounded-full px-3"
+                                >
+                                  <IconPencil className="mr-1 h-3 w-3" />
+                                  <span className="text-[10px] font-medium">Edit</span>
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleRemoveItem(index)}
+                                  className="h-7 rounded-full px-3 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/30"
+                                >
+                                  <IconTrash className="mr-1 h-3 w-3" />
+                                  <span className="text-[10px] font-medium">Delete</span>
+                                </Button>
                               </div>
                             )}
 
                             {/* Emoji Selection - Only in completed mode */}
                             {isCompleted && (
-                              <div className="mt-3 space-y-3">
+                              <div className="mt-1 space-y-3">
                                 <div className="flex gap-2.5">
                                   <Button
                                     size="lg"
@@ -737,48 +813,7 @@ export function AccountabilityApp() {
                               </div>
                             )}
                           </div>
-
-                          {/* Edit and Remove buttons - Only in draft mode */}
-                          {!isCompleted && editingIndex !== index && (
-                            <div className="flex shrink-0 items-center gap-2.5">
-                              {/* Quick Complete Button */}
-                              <Button
-                                size="icon"
-                                variant={item.emoji === "green" ? "default" : "ghost"}
-                                onClick={() => handleQuickComplete(index)}
-                                className={`h-8 w-8 rounded-xl ${
-                                  item.emoji === "green"
-                                    ? "bg-green-600 hover:bg-green-700 text-white"
-                                    : ""
-                                }`}
-                                title="Mark complete"
-                              >
-                                <IconCheck className="h-4 w-4" />
-                              </Button>
-
-                              <Separator
-                                orientation="vertical"
-                                className="hidden h-5 md:block"
-                              />
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => handleEditItem(index)}
-                                className="h-8 w-8 rounded-xl"
-                              >
-                                <IconPencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => handleRemoveItem(index)}
-                                className="h-8 w-8 rounded-xl"
-                              >
-                                <IconTrash className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          )}
-                        </div>
+                        )}
                       </CardContent>
                     </Card>
                   ))}
