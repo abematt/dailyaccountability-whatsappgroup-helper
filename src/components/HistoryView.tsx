@@ -87,15 +87,53 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
     const suffix = list.status === "completed" ? "Update" : "Goals";
     const isCompleted = list.status === "completed";
     let formatted = `*${date} - ${suffix}*\n\n`;
-    list.items.forEach((item, index) => {
-      const emoji = getEmojiDisplay(item.emoji);
-      const explanation =
-        item.emoji === "yellow" && item.explanation ? ` (${item.explanation})` : "";
-      // Use emoji as prefix if completed, otherwise use numbering
-      const prefix = isCompleted && emoji ? emoji : `${index + 1}.`;
-      formatted += `${prefix} ${item.text}${explanation}\n`;
-    });
-    return formatted;
+
+    // Group items by section
+    const personalItems = list.items.filter((item) => item.section === "personal");
+    const workItems = list.items.filter((item) => item.section === "work");
+    const noSectionItems = list.items.filter((item) => !item.section);
+
+    // Helper function to format items with numbering or emoji prefix
+    const formatSection = (sectionItems: ListItem[], startNumber: number) => {
+      return sectionItems
+        .map((item, idx) => {
+          const emoji = getEmojiDisplay(item.emoji);
+          const explanation =
+            item.emoji === "yellow" && item.explanation
+              ? ` (${item.explanation})`
+              : "";
+          // Use emoji as prefix if completed, otherwise use numbering
+          const prefix = isCompleted && emoji ? emoji : `${startNumber + idx}.`;
+          return `${prefix} ${item.text}${explanation}`;
+        })
+        .join("\n");
+    };
+
+    let currentNumber = 1;
+
+    // Add no-section items first
+    if (noSectionItems.length > 0) {
+      formatted += formatSection(noSectionItems, currentNumber);
+      formatted += "\n\n";
+      currentNumber += noSectionItems.length;
+    }
+
+    // Add Personal section
+    if (personalItems.length > 0) {
+      formatted += "*Personal*\n";
+      formatted += formatSection(personalItems, currentNumber);
+      formatted += "\n\n";
+      currentNumber += personalItems.length;
+    }
+
+    // Add Work section
+    if (workItems.length > 0) {
+      formatted += "*Work*\n";
+      formatted += formatSection(workItems, currentNumber);
+      formatted += "\n";
+    }
+
+    return formatted.trim();
   };
 
   const handleCopy = async () => {

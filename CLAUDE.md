@@ -161,9 +161,11 @@ npm run preview      # Preview production build
 ```
 
 ### User Profiles
-- **Abraham** - Blue avatar (A)
-- **Carlo** - Green avatar (C)
-- **Stefania** - Purple avatar (S)
+- **Abraham** - Avatar with initial (A)
+- **Carlo** - Avatar with initial (C)
+- **Stefania** - Avatar with initial (S)
+
+**Note**: All user avatars use the theme's primary color (`bg-primary`) rather than user-specific colors. The avatar appearance adapts to the current theme.
 
 ## Configuration
 
@@ -191,7 +193,7 @@ npm run preview      # Preview production build
 
 ### User Selection
 - Simple localStorage-based user selection (no authentication)
-- Three predefined users: Abraham (blue), Carlo (green), Stefania (purple)
+- Three predefined users: Abraham, Carlo, Stefania
 - Full-screen picker on first visit with avatar cards
 - Small avatar badge in top-right corner shows current user
 - Each user sees only their own lists, weekly goals, and history
@@ -239,6 +241,16 @@ npm run preview      # Preview production build
 - Keyboard shortcuts: Enter to save, Escape to cancel
 - Auto-focuses the input field for immediate typing
 
+### Edit Mode Panel
+- Distinct from inline editing, provides expanded item controls
+- Click pencil icon button to open expandable panel for each item
+- Panel includes:
+  - Section selector dropdown (Personal/Work/No Section)
+  - Edit button (triggers inline editing mode)
+  - Delete button (removes item from list)
+- Uses animated expansion/collapse transitions
+- Available only in draft mode
+
 ### Quick Complete
 - **Individual item completion** available in draft mode
 - Green checkmark button appears next to each item
@@ -279,6 +291,31 @@ npm run preview      # Preview production build
   - Completed mode: Items prefixed with emoji status `🟢`, `🟡`, `🔴` (replaces numbering)
 - **Sections**: Daily lists group by Personal/Work with bold headers
 - **Explanations**: Yellow emoji items can include optional explanations in parentheses
+
+### Animation System
+- Built with **Framer Motion** library for smooth, performant transitions
+- **List Item Animations**:
+  - Staggered entrance animations (items appear sequentially with slight delay)
+  - Layout animations when items are added, removed, or reordered
+  - Fade + slide transitions for smooth visual feedback
+- **Mode Transitions**:
+  - Animated transitions between view/edit modes in HistoryView
+  - Slide animations when switching between draft and completed states
+- **Banner Animations**:
+  - Weekly reminder banner uses entrance/exit animations
+  - Smooth slide-in from top with fade effect
+- **UI Component Animations**:
+  - Edit mode panel expansion/collapse
+  - Button hover effects and state changes
+  - Card elevation transitions on hover
+- **AnimatePresence**: Used for exit animations when items are removed from the DOM
+
+### Performance Optimizations
+- **Data Preloading**: Weekly goals data is preloaded in AccountabilityApp for smooth transitions when navigating to weekly view
+- **Lazy Initialization**: Both daily lists and weekly goals are initialized on first access via mutations (queries remain read-only)
+- **Compound Indexing**: Convex database uses compound indexes for efficient queries (userId + date, userId + weekStart)
+- **Client-Side Date Calculation**: Dates calculated on client and passed as parameters to reduce server-side computation
+- **Conditional Queries**: Queries skip execution when userId is not available (`userId ? { userId } : "skip"`)
 
 ## Important Notes
 
