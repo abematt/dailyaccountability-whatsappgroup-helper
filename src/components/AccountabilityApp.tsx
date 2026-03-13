@@ -13,7 +13,6 @@ import {
   IconHistory,
   IconPencil,
   IconX,
-  IconCalendarWeek,
   IconChevronDown,
   IconBriefcase,
   IconUser,
@@ -63,10 +62,6 @@ export function AccountabilityApp() {
   const todaysList = useQuery(
     api.dailyLists.getTodaysList,
     userId ? { userId, date: todayLocalDate } : "skip",
-  );
-  const daysSinceWeeklyUpdate = useQuery(
-    api.weeklyGoals.getDaysSinceLastUpdate,
-    userId ? { userId } : "skip",
   );
 
   // Preload weekly goals data for smooth transitions
@@ -360,8 +355,6 @@ export function AccountabilityApp() {
     return <HistoryView userId={userId} onBack={() => setShowHistory(false)} />;
   }
 
-  const showWeeklyReminder =
-    daysSinceWeeklyUpdate !== undefined && daysSinceWeeklyUpdate >= 7;
   const sectionIcon =
     currentSection === "work" ? (
       <IconBriefcase className="h-5 w-5" />
