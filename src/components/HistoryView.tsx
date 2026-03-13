@@ -286,7 +286,7 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
                       <Badge variant={selectedList.status === "completed" ? "default" : "secondary"} className="h-6 px-2.5 text-[11px] font-semibold uppercase tracking-wide">
-                        {selectedList.status === "completed" ? "Completed" : "In Progress"}
+                        {selectedList.status === "completed" ? "Completed" : "Draft"}
                       </Badge>
                       <Button
                         size="sm"

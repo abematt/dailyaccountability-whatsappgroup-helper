@@ -58,7 +58,7 @@ export const initializeTodaysList = mutation({
       )
       .first();
 
-    // Auto-mark previous day's items as red if day was never completed
+    // Auto-mark previous day's items as red and mark as completed if day was never completed
     if (previousList && previousList.status === "draft") {
       const autoMarkedItems = previousList.items.map((item) => ({
         ...item,
@@ -67,6 +67,7 @@ export const initializeTodaysList = mutation({
 
       await ctx.db.patch(previousList._id, {
         items: autoMarkedItems,
+        status: "completed", // Automatically mark previous day as completed
       });
     }
 
@@ -225,5 +226,48 @@ export const updateItemsWithEmojis = mutation({
       return existing._id;
     }
     return null;
+  },
+});
+
+// Migration: Mark all previous draft days as completed for ALL users
+// Run this from Convex dashboard with: migrateDraftDaysToCompleted({ todayDate: "2026-03-13" })
+export const migrateDraftDaysToCompleted = mutation({
+  args: { todayDate: v.string() },
+  handler: async (ctx, args) => {
+    // Get all daily lists in the database
+    const allLists = await ctx.db
+      .query("dailyLists")
+      .collect();
+
+    let updatedCount = 0;
+    const updatedByUser: Record<string, number> = {};
+
+    for (const list of allLists) {
+      // Only update lists that are:
+      // 1. In draft status
+      // 2. Before today (previous days)
+      if (list.status === "draft" && list.date < args.todayDate) {
+        // Mark all null emoji items as red
+        const autoMarkedItems = list.items.map((item) => ({
+          ...item,
+          emoji: item.emoji || ("red" as const),
+        }));
+
+        // Update the list to completed status with marked items
+        await ctx.db.patch(list._id, {
+          items: autoMarkedItems,
+          status: "completed",
+        });
+
+        updatedCount++;
+        updatedByUser[list.userId] = (updatedByUser[list.userId] || 0) + 1;
+      }
+    }
+
+    return {
+      success: true,
+      totalUpdated: updatedCount,
+      updatedByUser,
+    };
   },
 });
