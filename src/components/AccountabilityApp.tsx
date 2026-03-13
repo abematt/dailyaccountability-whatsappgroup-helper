@@ -425,7 +425,8 @@ export function AccountabilityApp() {
               Today's Goals
             </h1>
             <div className="flex items-center gap-2 shrink-0">
-              <Button
+              {/* Temporarily hidden - Weekly Goals button */}
+              {/* <Button
                 size="icon"
                 variant="ghost"
                 onClick={() => setShowWeekly(true)}
@@ -433,7 +434,7 @@ export function AccountabilityApp() {
                 title="Weekly Goals"
               >
                 <IconCalendarWeek className="h-5 w-5" />
-              </Button>
+              </Button> */}
               <UserAvatar userId={userId} inline />
             </div>
           </div>
@@ -448,8 +449,8 @@ export function AccountabilityApp() {
         <div className="app-content">
           <div className="grid h-full gap-5 lg:grid-cols-[minmax(0,1fr)_19.5rem]">
             <div className="min-w-0 space-y-4">
-              {/* 7-Day Reminder Banner */}
-              <AnimatePresence>
+              {/* Temporarily hidden - 7-Day Reminder Banner */}
+              {/* <AnimatePresence>
                 {showWeeklyReminder && (
                   <motion.div
                     initial={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -482,7 +483,7 @@ export function AccountabilityApp() {
                   </Card>
                 </motion.div>
               )}
-            </AnimatePresence>
+            </AnimatePresence> */}
 
               {/* Add Item Section - Only show in draft mode */}
               {!isCompleted && (

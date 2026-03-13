@@ -22,10 +22,11 @@ A mobile-first React application for tracking daily tasks and weekly goals with 
   - 🟡 Partially completed (with optional explanation)
   - 🔴 Not completed
 
-### 📅 Weekly Goals
+### 📅 Weekly Goals *(Temporarily Unavailable)*
+**Note**: Weekly goals functionality is currently hidden from the UI but remains available in the codebase.
 - Set weekly goals with automatic carryover of incomplete items
 - ISO 8601 week standard (Monday-Sunday)
-- 7-day reminder when goals haven't been updated
+- ~~7-day reminder when goals haven't been updated~~ *(Hidden)*
 - Historical view of last 12 weeks
 
 ### 📝 Smart Carryover Logic

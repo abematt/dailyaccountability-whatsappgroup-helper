@@ -12,6 +12,8 @@ This is a **mobile-first** React-based daily accountability tracking application
 
 **User System**: Simple username-based separation with no authentication. Users select their profile on first visit, and the selection persists in localStorage. Each user sees only their own lists.
 
+**Weekly Features Status**: The weekly goals system (including the weekly goals button and 7-day reminder banner) is currently **temporarily hidden** via code comments in [AccountabilityApp.tsx](src/components/AccountabilityApp.tsx). The backend functionality and WeeklyGoalsApp component remain fully functional and can be re-enabled by uncommenting the relevant code sections.
+
 ## Development Commands
 
 ### Running the Application
@@ -52,7 +54,7 @@ npm run preview      # Preview production build
   - `revertTodaysListToDraft` - Reverts a completed day back to draft mode for a user
   - `updateItemsWithEmojis` - Updates emoji assignments for items for a user
   - `migrateDraftDaysToCompleted` - Admin/migration function to mark all previous draft days as completed for all users
-- **Weekly Goals Functions**: [convex/weeklyGoals.ts](convex/weeklyGoals.ts) - Contains queries and mutations for weekly goals:
+- **Weekly Goals Functions** *(UI temporarily hidden)*: [convex/weeklyGoals.ts](convex/weeklyGoals.ts) - Contains queries and mutations for weekly goals:
   - `getCurrentWeekGoals` - Fetches current week's goals for a user
   - `initializeCurrentWeek` - Creates new week with auto-carryover from previous week
   - `getGoalsByWeek` - Fetches specific week's goals by weekStart date
@@ -61,15 +63,15 @@ npm run preview      # Preview production build
   - `markCurrentWeekCompleted` - Marks current week as completed
   - `revertCurrentWeekToDraft` - Reverts current week back to draft mode
   - `updateWeekItemsWithEmojis` - Updates emoji assignments for weekly items
-  - `getDaysSinceLastUpdate` - Returns days since last weekly update (for 7-day reminder)
+  - `getDaysSinceLastUpdate` - Returns days since last weekly update (for 7-day reminder, currently hidden)
 - **Week Utilities**: [convex/weekUtils.ts](convex/weekUtils.ts) - Week calculation helpers using ISO 8601 standard (Monday-Sunday)
 
 ### Frontend: React + TypeScript + Vite
 - **Main Components**:
-  - [src/components/AccountabilityApp.tsx](src/components/AccountabilityApp.tsx) - Main application interface for managing today's list, handles user selection, shows weekly reminder banner
+  - [src/components/AccountabilityApp.tsx](src/components/AccountabilityApp.tsx) - Main application interface for managing today's list, handles user selection *(weekly button and reminder banner temporarily hidden via comments)*
   - [src/components/HistoryView.tsx](src/components/HistoryView.tsx) - View for browsing past days' lists (filtered by user)
-  - [src/components/WeeklyGoalsApp.tsx](src/components/WeeklyGoalsApp.tsx) - Weekly goals interface with simplified list (no sections)
-  - [src/components/WeeklyHistoryView.tsx](src/components/WeeklyHistoryView.tsx) - View for browsing past weeks' goals (last 12 weeks)
+  - [src/components/WeeklyGoalsApp.tsx](src/components/WeeklyGoalsApp.tsx) - Weekly goals interface with simplified list (no sections) *(currently inaccessible from UI)*
+  - [src/components/WeeklyHistoryView.tsx](src/components/WeeklyHistoryView.tsx) - View for browsing past weeks' goals (last 12 weeks) *(currently inaccessible from UI)*
   - [src/components/UserPicker.tsx](src/components/UserPicker.tsx) - Full-screen user selection interface with avatar cards
   - [src/components/UserAvatar.tsx](src/components/UserAvatar.tsx) - Small avatar badge displayed in top-right corner
 - **UI Components**: [src/components/ui/](src/components/ui/) - shadcn/ui components (radix-maia style)
@@ -113,8 +115,10 @@ npm run preview      # Preview production build
    - No add/edit/delete functionality - items are read-only
    - All changes save automatically to database
 
-#### Weekly Goals Flow
-1. User clicks "Weekly" button in navbar to access WeeklyGoalsApp
+#### Weekly Goals Flow *(Currently Hidden from UI)*
+**Note**: The weekly goals functionality is temporarily hidden from the UI but remains fully functional in the backend. To re-enable, uncomment the weekly button and reminder banner in [AccountabilityApp.tsx](src/components/AccountabilityApp.tsx).
+
+1. ~~User clicks "Weekly" button in navbar to access WeeklyGoalsApp~~ *(Button currently hidden)*
 2. On first access of a new week (Monday), the system automatically:
    - Creates new week entry with ISO week number and date range
    - Checks previous week's status:
@@ -126,7 +130,7 @@ npm run preview      # Preview production build
 5. In completed mode, assigns emoji status to each goal (same as daily lists)
 6. User can copy formatted week to WhatsApp (includes week number and date range)
 7. Historical weeks viewable in WeeklyHistoryView (last 12 weeks)
-8. **7-Day Reminder**: If weekly goals haven't been updated in 7+ days, a banner appears on main daily view prompting update
+8. ~~**7-Day Reminder**: If weekly goals haven't been updated in 7+ days, a banner appears on main daily view prompting update~~ *(Banner currently hidden)*
 
 ### Key Data Structures
 
@@ -203,8 +207,12 @@ npm run preview      # Preview production build
 - Each user sees only their own lists, weekly goals, and history
 - No logout functionality - users stay logged in via localStorage
 
-### Weekly Goals System
-- **Navigation**: Calendar icon button in navbar opens weekly goals section
+### Weekly Goals System *(Temporarily Hidden)*
+**Status**: This feature is temporarily hidden from the UI. The backend remains fully functional. To restore:
+1. Uncomment the weekly button code in [AccountabilityApp.tsx](src/components/AccountabilityApp.tsx) (lines ~428-437)
+2. Uncomment the 7-day reminder banner code (lines ~452-485)
+
+- ~~**Navigation**: Calendar icon button in navbar opens weekly goals section~~ *(Hidden)*
 - **Week Display**: Shows "Week X - DD Mon - DD Mon" format (e.g., "Week 4 - 16 Feb - 22 Feb")
 - **Auto-Carryover**: When accessing a new week (Monday start):
   - If previous week was completed: carries over only yellow/red items
@@ -212,7 +220,7 @@ npm run preview      # Preview production build
   - Empty previous week: starts with empty list
 - **Carried Over Badge**: Items carried from previous week show amber "Carried Over" badge
 - **No Sections**: Weekly goals use simple flat list (no Personal/Work categorization)
-- **7-Day Reminder**: Banner appears on daily view if weekly goals not updated in 7+ days
+- ~~**7-Day Reminder**: Banner appears on daily view if weekly goals not updated in 7+ days~~ *(Hidden)*
 - **History**: View last 12 weeks in WeeklyHistoryView
 - **WhatsApp Export**: Formatted with week number and date range header
 
