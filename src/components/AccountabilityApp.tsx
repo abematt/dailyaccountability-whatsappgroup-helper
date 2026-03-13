@@ -374,58 +374,53 @@ export function AccountabilityApp() {
 
   const actionButtons = (
     <>
-      {/* Mark Completed and Copy buttons row */}
-      {(!isCompleted && items.length > 0) || (isCompleted || items.length > 0) || isLoading ? (
-        <div className="flex gap-2">
-          {/* Mark Completed Button - Only show in draft mode */}
-          {!isCompleted && (
-            <Button
-              onClick={handleMarkCompleted}
-              disabled={isLoading || items.length === 0}
-              className="h-10 flex-1 rounded-xl text-sm shadow-sm"
-            >
-              <IconCheck className="mr-1.5 h-4 w-4" />
-              Mark Complete
-            </Button>
-          )}
+      {/* Mark Completed Button - Full width prominent button */}
+      {!isCompleted && items.length > 0 && (
+        <Button
+          onClick={handleMarkCompleted}
+          disabled={isLoading || items.length === 0}
+          className="h-14 w-full rounded-lg text-base font-bold shadow-sm"
+        >
+          <IconCheck className="mr-2 h-5 w-5 stroke-[2.5]" />
+          Complete
+        </Button>
+      )}
 
-          {/* Revert to Draft Button - Only show in completed mode */}
-          {isCompleted && (
-            <Button
-              onClick={handleRevertToDraft}
-              disabled={isLoading}
-              variant="secondary"
-              className="h-10 flex-1 rounded-xl border border-amber-300/70 bg-amber-100/70 text-amber-900 hover:bg-amber-200/70 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-200 dark:hover:bg-amber-500/20 text-sm"
-            >
-              <IconX className="mr-1.5 h-4 w-4" />
-              Back to Goals
-            </Button>
-          )}
+      {/* Revert to Draft Button - Only show in completed mode */}
+      {isCompleted && (
+        <Button
+          onClick={handleRevertToDraft}
+          disabled={isLoading}
+          variant="secondary"
+          className="h-14 w-full rounded-lg border border-amber-300/70 bg-amber-100/70 text-amber-900 hover:bg-amber-200/70 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-200 dark:hover:bg-amber-500/20 text-base font-semibold"
+        >
+          <IconX className="mr-2 h-5 w-5" />
+          Back to Goals
+        </Button>
+      )}
 
-          {/* Copy Button - Show in completed mode or if there are items */}
-          {(isCompleted || items.length > 0 || isLoading) && (
-            <Button
-              onClick={handleCopy}
-              disabled={isLoading || items.length === 0}
-              variant={copied ? "default" : "outline"}
-              className="h-10 flex-1 rounded-xl text-sm"
-            >
-              <IconCopy className="mr-1.5 h-4 w-4" />
-              {copied ? "Copied!" : "Copy"}
-            </Button>
-          )}
-        </div>
-      ) : null}
+      {/* Copy Button - Show in completed mode or if there are items */}
+      {(isCompleted || items.length > 0 || isLoading) && (
+        <Button
+          onClick={handleCopy}
+          disabled={isLoading || items.length === 0}
+          variant="outline"
+          className="h-12 w-full rounded-lg text-base font-medium border-border/60"
+        >
+          <IconCopy className="mr-2 h-4.5 w-4.5" />
+          {copied ? "Copied!" : "Copy"}
+        </Button>
+      )}
 
       {/* History Button - Full width below */}
       <Button
         onClick={() => setShowHistory(true)}
         disabled={isLoading}
         variant="ghost"
-        className="h-10 w-full rounded-xl text-sm"
+        className="h-12 w-full rounded-lg text-base font-medium"
       >
-        <IconHistory className="mr-1.5 h-4 w-4" />
-        View Previous Days
+        <IconHistory className="mr-2 h-4.5 w-4.5" />
+        Previous Days
       </Button>
     </>
   );
@@ -436,9 +431,14 @@ export function AccountabilityApp() {
         {/* Header - Fixed */}
         <div className="app-header shrink-0">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-extrabold tracking-wide uppercase text-foreground/80 whitespace-nowrap" style={{ fontFamily: 'Inter, -apple-system, system-ui, sans-serif', fontWeight: '800' }}>
-              Today's Goals
-            </h1>
+            <div>
+              <h1 className="text-2xl font-extrabold tracking-tight text-foreground/90" style={{ fontFamily: 'Inter, -apple-system, system-ui, sans-serif', fontWeight: '800' }}>
+                Today's Tasks
+              </h1>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {items.length} total, {items.filter(item => item.emoji === "green").length} completed
+              </p>
+            </div>
             <div className="flex items-center gap-2 shrink-0">
               {/* Temporarily hidden - Weekly Goals button */}
               {/* <Button
@@ -454,8 +454,8 @@ export function AccountabilityApp() {
             </div>
           </div>
 
-          <div className="mt-1 flex items-center justify-between text-sm">
-            <span className="font-semibold text-foreground">{todayWeekday}</span>
+          <div className="mt-2 flex items-center justify-between text-sm">
+            <span className="font-semibold text-foreground/80">{todayWeekday}</span>
             <span className="text-muted-foreground">{todayDayMonthYear}</span>
           </div>
         </div>
@@ -463,7 +463,7 @@ export function AccountabilityApp() {
         {/* Content Area - Scrollable */}
         <div className="app-content">
           <div className="grid h-full gap-5 lg:grid-cols-[minmax(0,1fr)_19.5rem]">
-            <div className="min-w-0 space-y-4">
+            <div className="min-w-0 space-y-3">
               {/* Temporarily hidden - 7-Day Reminder Banner */}
               {/* <AnimatePresence>
                 {showWeeklyReminder && (
@@ -502,7 +502,7 @@ export function AccountabilityApp() {
 
               {/* Add Item Section - Only show in draft mode */}
               {!isCompleted && (
-                <div className="px-0 py-1 sm:px-3.5 sm:py-2.5">
+                <div className="px-0 py-0 sm:px-0 sm:py-0">
                   <div className="flex items-center gap-2.5">
                     <Input
                       placeholder="Type your goal here..."
@@ -511,7 +511,7 @@ export function AccountabilityApp() {
                       onKeyDown={(e) =>
                         e.key === "Enter" && hasNewItemText && handleAddItem()
                       }
-                      className="h-11 flex-1 rounded-lg border-border/75 bg-background/75 text-base"
+                      className="h-12 flex-1 rounded-lg border-border/60 bg-white dark:bg-background text-base placeholder:text-muted-foreground/50"
                     />
                     <Select
                       value={currentSection || "none"}
@@ -524,7 +524,7 @@ export function AccountabilityApp() {
                       }
                     >
                       <SelectTrigger
-                        className="!h-11 !w-11 !min-w-11 !max-w-11 rounded-2xl border-border/75 bg-background/75 !px-0 !justify-center [&>[data-slot=select-value]]:hidden [&>svg:last-child]:hidden"
+                        className="!h-12 !w-12 !min-w-12 !max-w-12 rounded-lg border-border/60 bg-white dark:bg-background !px-0 !justify-center [&>[data-slot=select-value]]:hidden [&>svg:last-child]:hidden"
                         aria-label="Choose section"
                         title={
                           currentSection === "personal"
@@ -570,20 +570,10 @@ export function AccountabilityApp() {
                       onClick={handleAddItem}
                       disabled={!hasNewItemText}
                       size="icon"
-                      className="h-11 w-11 shrink-0 rounded-2xl shadow-sm"
+                      className="h-12 w-12 shrink-0 rounded-lg shadow-sm"
                     >
-                      <IconPlus className="h-5 w-5" />
+                      <IconPlus className="h-5 w-5 stroke-[2.5]" />
                     </Button>
-                  </div>
-                </div>
-              )}
-
-              {!isCompleted && (
-                <div className="px-0 sm:px-3.5">
-                  <div className="flex items-center gap-4">
-                    <div className="h-px flex-1 bg-gradient-to-r from-transparent to-border/60"></div>
-                    <h2 className="text-xl font-extrabold tracking-wide uppercase text-muted-foreground/70 shrink-0 whitespace-nowrap" style={{ fontFamily: 'Inter, -apple-system, system-ui, sans-serif', fontWeight: '800' }}>Task List</h2>
-                    <div className="h-px flex-1 bg-gradient-to-l from-transparent to-border/60"></div>
                   </div>
                 </div>
               )}
@@ -606,7 +596,7 @@ export function AccountabilityApp() {
                   </Card>
                 </motion.div>
               ) : (
-                <div className="space-y-3 pb-4">
+                <div className="space-y-2.5 pb-4">
                   <AnimatePresence mode="popLayout">
                     {items.map((item, index) => (
                       <motion.div
@@ -621,7 +611,7 @@ export function AccountabilityApp() {
                       >
                         <Card
                       key={index}
-                      className={`task-card rounded-md transition-colors ${
+                      className={`rounded-md task-card transition-colors ${
                         isCompleted
                           ? getItemAccentClass(item.emoji)
                           : item.emoji === "green"
@@ -629,7 +619,7 @@ export function AccountabilityApp() {
                             : ""
                       }`}
                     >
-                      <CardContent className="px-3 py-2.5 sm:px-3.5 sm:py-3">
+                      <CardContent className="px-3.5 py-3 sm:px-4 sm:py-3">
                         {editingIndex === index ? (
                           <div className="space-y-2">
                             {/* Edit mode - Text input and save button */}
@@ -646,13 +636,13 @@ export function AccountabilityApp() {
                                     handleCancelEdit();
                                 }}
                                 autoFocus
-                                className="h-10 flex-1 rounded-xl border-border/75 bg-background/75 text-base"
+                                className="h-10 flex-1 rounded-lg border-border/75 bg-background/75 text-base"
                               />
                               <Button
                                 size="icon"
                                 variant="ghost"
                                 onClick={() => handleSaveEdit(index)}
-                                className="h-9 w-9 shrink-0 rounded-xl"
+                                className="h-9 w-9 shrink-0 rounded-lg"
                                 title="Save changes"
                               >
                                 <IconDeviceFloppy className="h-4 w-4" />
@@ -722,7 +712,27 @@ export function AccountabilityApp() {
                         ) : (
                           <div className="space-y-2">
                             {/* Text and section row */}
-                            <div className="flex items-start justify-between gap-2.5">
+                            <div className="flex items-start gap-3">
+                              {/* Always visible actions - Only in draft mode */}
+                              {!isCompleted && (
+                                <div className="flex shrink-0 items-center gap-2.5 pt-0.5">
+                                  {/* Quick Complete Checkbox */}
+                                  <button
+                                    onClick={() => handleQuickComplete(index)}
+                                    className={`h-7 w-7 rounded-lg border-2 flex items-center justify-center transition-all ${
+                                      item.emoji === "green"
+                                        ? "bg-green-600 border-green-600 hover:bg-green-700 hover:border-green-700"
+                                        : "border-border/60 hover:border-border bg-white dark:bg-background"
+                                    }`}
+                                    title="Mark complete"
+                                  >
+                                    {item.emoji === "green" && (
+                                      <IconCheck className="h-5 w-5 text-white stroke-[3]" />
+                                    )}
+                                  </button>
+                                </div>
+                              )}
+
                               <div className="flex-1 min-w-0">
                                 <p className="task-text">
                                   {item.text}
@@ -732,10 +742,10 @@ export function AccountabilityApp() {
                                 {!isCompleted && item.section && (
                                   <Badge
                                     variant="outline"
-                                    className={`mt-2 inline-flex h-5 shrink-0 text-[10px] font-semibold uppercase tracking-wide ${
+                                    className={`mt-1.5 inline-flex h-5 shrink-0 text-[10px] font-bold uppercase tracking-wide border-0 ${
                                       item.section === "personal"
-                                        ? "border-blue-300 bg-blue-50/80 text-blue-700"
-                                        : "border-violet-300 bg-violet-50/80 text-violet-700"
+                                        ? "bg-pink-500/90 text-white"
+                                        : "bg-blue-600/90 text-white"
                                     }`}
                                   >
                                     {item.section === "personal" ? "Personal" : "Work"}
@@ -746,10 +756,10 @@ export function AccountabilityApp() {
                                 {isCompleted && item.section && (
                                   <Badge
                                     variant="outline"
-                                    className={`mt-2 inline-flex h-5 shrink-0 text-[10px] font-semibold uppercase tracking-wide ${
+                                    className={`mt-1.5 inline-flex h-5 shrink-0 text-[10px] font-bold uppercase tracking-wide border-0 ${
                                       item.section === "personal"
-                                        ? "border-blue-300 bg-blue-50/80 text-blue-700"
-                                        : "border-violet-300 bg-violet-50/80 text-violet-700"
+                                        ? "bg-pink-500/90 text-white"
+                                        : "bg-blue-600/90 text-white"
                                     }`}
                                   >
                                     {item.section === "personal" ? "Personal" : "Work"}
@@ -757,33 +767,17 @@ export function AccountabilityApp() {
                                 )}
                               </div>
 
-                              {/* Always visible actions - Only in draft mode */}
+                              {/* Edit button - Only in draft mode */}
                               {!isCompleted && (
-                                <div className="flex shrink-0 items-center gap-2">
-                                  {/* Quick Complete Button */}
-                                  <Button
-                                    size="icon"
-                                    variant={item.emoji === "green" ? "default" : "ghost"}
-                                    onClick={() => handleQuickComplete(index)}
-                                    className={`h-8 w-8 rounded-xl ${
-                                      item.emoji === "green"
-                                        ? "bg-green-600 hover:bg-green-700 text-white"
-                                        : ""
-                                    }`}
-                                    title="Mark complete"
-                                  >
-                                    <IconCheck className="h-4 w-4" />
-                                  </Button>
-
-                                  {/* Edit mode toggle */}
+                                <div className="flex shrink-0 items-center pt-0.5">
                                   <Button
                                     size="icon"
                                     variant={editModeIndex === index ? "secondary" : "ghost"}
                                     onClick={() => handleToggleEditMode(index)}
-                                    className="h-8 w-8 rounded-xl"
+                                    className="h-9 w-9 rounded-lg"
                                     title="Edit options"
                                   >
-                                    <IconPencil className="h-4 w-4" />
+                                    <IconPencil className="h-4.5 w-4.5" />
                                   </Button>
                                 </div>
                               )}

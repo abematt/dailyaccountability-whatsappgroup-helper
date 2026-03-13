@@ -164,12 +164,12 @@
   }
 
   .task-card {
-    @apply border border-border/70 bg-card/90 rounded-[1.15rem]
-           shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)]
-           transition-shadow duration-200
-           hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)]
-           dark:bg-card/50 dark:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.3)]
-           dark:hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.4)];
+    @apply border border-border/60 bg-white rounded
+           shadow-[0_1px_3px_rgba(0,0,0,0.06)]
+           transition-all duration-200
+           hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]
+           dark:bg-card/60 dark:border-border/50 dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)]
+           dark:hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)];
   }
 
   .task-row {
@@ -177,6 +177,6 @@
   }
 
   .task-text {
-    @apply text-[15px] font-semibold leading-[1.4] wrap-break-word flex-1 min-w-0 text-foreground;
+    @apply text-base font-bold leading-[1.5] wrap-break-word flex-1 min-w-0 text-foreground/90;
   }
 }
