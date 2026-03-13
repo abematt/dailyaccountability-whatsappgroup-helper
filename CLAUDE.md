@@ -247,21 +247,22 @@ npm run preview      # Preview production build
   - Then `*Work*` heading with work items
   - Continuous sequential numbering across all sections
 
-### Inline Editing
-- In draft mode, click pencil icon to edit any item's text
-- Edit mode shows input field with Save (check) and Cancel (X) buttons
-- Keyboard shortcuts: Enter to save, Escape to cancel
-- Auto-focuses the input field for immediate typing
-
-### Edit Mode Panel
-- Distinct from inline editing, provides expanded item controls
-- Click pencil icon button to open expandable panel for each item
-- Panel includes:
-  - Section selector dropdown (Personal/Work/No Section)
-  - Edit button (triggers inline editing mode)
-  - Delete button (removes item from list)
-- Uses animated expansion/collapse transitions
+### Inline Editing & Edit Mode
+- In draft mode, click pencil icon button to enter edit mode for any item
+- Edit mode shows a unified interface with:
+  - **Text input field** with auto-focus for immediate editing
+  - **Save button** (floppy disk icon) to save changes
+  - **Section selector dropdown** below (Personal/Work/No Section)
+  - **Delete button** below to remove the item
+- The pencil button transforms into the edit interface - no separate "Edit" button needed
+- **Keyboard shortcuts**: Enter to save, Escape to cancel
+- **Auto-save on edit**: Changes clear properly when deleting items in edit mode
+- Text is **not directly clickable** - must use pencil button to enter edit mode
+- **Icon distinction**:
+  - Quick complete uses checkmark icon (✓)
+  - Edit mode save uses floppy disk icon (💾)
 - Available only in draft mode
+- See [AccountabilityApp.tsx:618-706](src/components/AccountabilityApp.tsx#L618-L706) for implementation
 
 ### Quick Complete
 - **Individual item completion** available in draft mode
@@ -312,8 +313,9 @@ npm run preview      # Preview production build
 - Built with **Framer Motion** library for smooth, performant transitions
 - **List Item Animations**:
   - Staggered entrance animations (items appear sequentially with slight delay)
-  - Layout animations when items are added, removed, or reordered
-  - Fade + slide transitions for smooth visual feedback
+  - Fade + slide transitions for smooth visual feedback (opacity and y-axis)
+  - **No zoom/scale animations** - removed to prevent jarring visual effects
+  - **No layout prop** on list items - prevents automatic layout animations that cause unwanted scaling
 - **Mode Transitions**:
   - Animated transitions between view/edit modes in HistoryView
   - Slide animations when switching between draft and completed states
@@ -321,10 +323,11 @@ npm run preview      # Preview production build
   - Weekly reminder banner uses entrance/exit animations
   - Smooth slide-in from top with fade effect
 - **UI Component Animations**:
-  - Edit mode panel expansion/collapse
+  - Edit mode panel expansion/collapse (height and opacity)
   - Button hover effects and state changes
   - Card elevation transitions on hover
 - **AnimatePresence**: Used for exit animations when items are removed from the DOM
+- See [AccountabilityApp.tsx:595-606](src/components/AccountabilityApp.tsx#L595-L606) for list animation configuration
 
 ### Performance Optimizations
 - **Data Preloading**: Weekly goals data is preloaded in AccountabilityApp for smooth transitions when navigating to weekly view

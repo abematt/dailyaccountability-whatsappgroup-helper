@@ -17,6 +17,7 @@ import {
   IconChevronDown,
   IconBriefcase,
   IconUser,
+  IconDeviceFloppy,
 } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -147,6 +148,15 @@ export function AccountabilityApp() {
     if (!userId) return;
     const newItems = items.filter((_, i) => i !== index);
     setItems(newItems);
+    // Clear editing state if we're deleting the item being edited
+    if (editingIndex === index) {
+      setEditingIndex(null);
+      setEditingText("");
+    }
+    // Clear edit mode panel if we're deleting the item in edit mode
+    if (editModeIndex === index) {
+      setEditModeIndex(null);
+    }
     upsertList({
       userId,
       date: todayLocalDate,
@@ -156,12 +166,17 @@ export function AccountabilityApp() {
   };
 
   const handleToggleEditMode = (index: number) => {
-    setEditModeIndex(editModeIndex === index ? null : index);
-  };
-
-  const handleEditItem = (index: number) => {
-    setEditingIndex(index);
-    setEditingText(items[index].text);
+    if (editModeIndex === index) {
+      // Closing edit mode
+      setEditModeIndex(null);
+      setEditingIndex(null);
+      setEditingText("");
+    } else {
+      // Opening edit mode - trigger inline editing
+      setEditModeIndex(index);
+      setEditingIndex(index);
+      setEditingText(items[index].text);
+    }
   };
 
   const handleSectionChange = (index: number, value: string) => {
@@ -596,14 +611,13 @@ export function AccountabilityApp() {
                     {items.map((item, index) => (
                       <motion.div
                         key={index}
-                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, x: -100, scale: 0.95 }}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, x: -100 }}
                         transition={{
                           duration: 0.2,
                           delay: index * 0.03
                         }}
-                        layout
                       >
                         <Card
                       key={index}
@@ -617,47 +631,105 @@ export function AccountabilityApp() {
                     >
                       <CardContent className="px-3 py-2.5 sm:px-3.5 sm:py-3">
                         {editingIndex === index ? (
-                          <div className="flex items-center gap-2.5">
-                            <Input
-                              value={editingText}
-                              onChange={(e) =>
-                                setEditingText(e.target.value)
-                              }
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter")
-                                  handleSaveEdit(index);
-                                if (e.key === "Escape")
-                                  handleCancelEdit();
-                              }}
-                              autoFocus
-                              className="h-10 flex-1 rounded-xl border-border/75 bg-background/75 text-base"
-                            />
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => handleSaveEdit(index)}
-                              className="h-9 w-9 shrink-0 rounded-xl"
-                            >
-                              <IconCheck className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={handleCancelEdit}
-                              className="h-9 w-9 shrink-0 rounded-xl"
-                            >
-                              <IconX className="h-4 w-4" />
-                            </Button>
+                          <div className="space-y-2">
+                            {/* Edit mode - Text input and save button */}
+                            <div className="flex items-center gap-2.5">
+                              <Input
+                                value={editingText}
+                                onChange={(e) =>
+                                  setEditingText(e.target.value)
+                                }
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter")
+                                    handleSaveEdit(index);
+                                  if (e.key === "Escape")
+                                    handleCancelEdit();
+                                }}
+                                autoFocus
+                                className="h-10 flex-1 rounded-xl border-border/75 bg-background/75 text-base"
+                              />
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => handleSaveEdit(index)}
+                                className="h-9 w-9 shrink-0 rounded-xl"
+                                title="Save changes"
+                              >
+                                <IconDeviceFloppy className="h-4 w-4" />
+                              </Button>
+                            </div>
+
+                            {/* Edit mode panel with section and delete */}
+                            <div className="flex flex-wrap justify-between items-center gap-2 pt-1">
+                              {/* Section selector */}
+                              <Select
+                                value={item.section || "none"}
+                                onValueChange={(value) =>
+                                  handleSectionChange(index, value)
+                                }
+                              >
+                                <SelectTrigger
+                                  className={`h-7 w-auto rounded-full px-2.5 text-[10px] font-semibold uppercase tracking-wide ${
+                                    item.section === "personal"
+                                      ? "border-blue-300 bg-blue-50/80 text-blue-700"
+                                      : item.section === "work"
+                                        ? "border-violet-300 bg-violet-50/80 text-violet-700"
+                                        : "border-border bg-background text-muted-foreground"
+                                  }`}
+                                  aria-label="Edit section"
+                                >
+                                  <SelectValue placeholder="No Section" />
+                                </SelectTrigger>
+                                <SelectContent
+                                  position="popper"
+                                  align="end"
+                                  sideOffset={6}
+                                  className="min-w-36 p-1.5"
+                                >
+                                  <SelectItem
+                                    value="none"
+                                    className="rounded-lg py-2.5 pl-3.5 pr-8"
+                                  >
+                                    No Section
+                                  </SelectItem>
+                                  <SelectItem
+                                    value="personal"
+                                    className="rounded-lg py-2.5 pl-3.5 pr-8"
+                                  >
+                                    Personal
+                                  </SelectItem>
+                                  <SelectItem
+                                    value="work"
+                                    className="rounded-lg py-2.5 pl-3.5 pr-8"
+                                  >
+                                    Work
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+
+                              {/* Delete action */}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleRemoveItem(index)}
+                                className="h-7 rounded-full px-3 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/30"
+                              >
+                                <IconTrash className="mr-1 h-3 w-3" />
+                                <span className="text-[10px] font-medium">Delete</span>
+                              </Button>
+                            </div>
                           </div>
                         ) : (
                           <div className="space-y-2">
                             {/* Text and section row */}
                             <div className="flex items-start justify-between gap-2.5">
                               <div className="flex-1 min-w-0">
-                                <p className="task-text">{item.text}</p>
+                                <p className="task-text">
+                                  {item.text}
+                                </p>
 
                                 {/* Section badge - only show when not in edit mode */}
-                                {!isCompleted && item.section && editModeIndex !== index && (
+                                {!isCompleted && item.section && (
                                   <Badge
                                     variant="outline"
                                     className={`mt-2 inline-flex h-5 shrink-0 text-[10px] font-semibold uppercase tracking-wide ${
@@ -716,87 +788,6 @@ export function AccountabilityApp() {
                                 </div>
                               )}
                             </div>
-
-                            {/* Edit mode panel - Only show when editModeIndex matches */}
-                            <AnimatePresence>
-                              {!isCompleted && editModeIndex === index && (
-                                <motion.div
-                                  initial={{ height: 0, opacity: 0 }}
-                                  animate={{ height: "auto", opacity: 1 }}
-                                  exit={{ height: 0, opacity: 0 }}
-                                  transition={{ duration: 0.2, ease: "easeInOut" }}
-                                  className="overflow-hidden"
-                                >
-                                  <div className="flex flex-wrap justify-between items-center gap-2 pt-1">
-                                {/* Section selector */}
-                                <Select
-                                  value={item.section || "none"}
-                                  onValueChange={(value) =>
-                                    handleSectionChange(index, value)
-                                  }
-                                >
-                                  <SelectTrigger
-                                    className={`h-7 w-auto rounded-full px-2.5 text-[10px] font-semibold uppercase tracking-wide ${
-                                      item.section === "personal"
-                                        ? "border-blue-300 bg-blue-50/80 text-blue-700"
-                                        : item.section === "work"
-                                          ? "border-violet-300 bg-violet-50/80 text-violet-700"
-                                          : "border-border bg-background text-muted-foreground"
-                                    }`}
-                                    aria-label="Edit section"
-                                  >
-                                    <SelectValue placeholder="No Section" />
-                                  </SelectTrigger>
-                                  <SelectContent
-                                    position="popper"
-                                    align="end"
-                                    sideOffset={6}
-                                    className="min-w-36 p-1.5"
-                                  >
-                                    <SelectItem
-                                      value="none"
-                                      className="rounded-lg py-2.5 pl-3.5 pr-8"
-                                    >
-                                      No Section
-                                    </SelectItem>
-                                    <SelectItem
-                                      value="personal"
-                                      className="rounded-lg py-2.5 pl-3.5 pr-8"
-                                    >
-                                      Personal
-                                    </SelectItem>
-                                    <SelectItem
-                                      value="work"
-                                      className="rounded-lg py-2.5 pl-3.5 pr-8"
-                                    >
-                                      Work
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-
-                                {/* Edit and delete actions */}
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleEditItem(index)}
-                                  className="h-7 rounded-full px-3"
-                                >
-                                  <IconPencil className="mr-1 h-3 w-3" />
-                                  <span className="text-[10px] font-medium">Edit</span>
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleRemoveItem(index)}
-                                  className="h-7 rounded-full px-3 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/30"
-                                >
-                                  <IconTrash className="mr-1 h-3 w-3" />
-                                    <span className="text-[10px] font-medium">Delete</span>
-                                  </Button>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
 
                             {/* Emoji Selection - Only in completed mode */}
                             <AnimatePresence>

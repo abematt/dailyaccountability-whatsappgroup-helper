@@ -16,6 +16,7 @@ A mobile-first React application for tracking daily tasks and weekly goals with 
 
 ### ✅ Daily Task Management
 - Create daily task lists with optional Personal/Work sections
+- Streamlined inline editing with save button
 - Quick complete button for individual items
 - Mark days as completed and rate tasks with emoji status:
   - 🟢 Completed successfully
