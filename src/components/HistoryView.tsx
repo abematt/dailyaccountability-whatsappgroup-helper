@@ -319,7 +319,7 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
                         transition={{ duration: 0.2 }}
                       >
                         {/* View Mode */}
-                        <div className="space-y-3.5">
+                        <div className="space-y-3.5 pb-8">
                           <AnimatePresence mode="popLayout">
                             {selectedList.items.map((item, index) => (
                               <motion.div
@@ -381,7 +381,7 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
                     transition={{ duration: 0.2 }}
                   >
                     {/* Edit Mode */}
-                    <div className="space-y-3">
+                    <div className="space-y-3 pb-8">
                         {editingItems.map((item, index) => (
                           <Card
                             key={index}

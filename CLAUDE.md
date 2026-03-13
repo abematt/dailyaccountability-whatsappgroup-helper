@@ -231,6 +231,10 @@ npm run preview      # Preview production build
   - Content area (list items) is independently scrollable
 - **Mobile-First**: All components optimized for small screens first
 - **Responsive Scrolling**: Content area uses flexbox with `min-h-0` to maintain proper scrolling within viewport height
+- **List Spacing**: Bottom padding added to prevent items from crowding the footer/bottom edge
+  - Today's list: `pb-4` (16px) spacing in [AccountabilityApp.tsx:609](src/components/AccountabilityApp.tsx#L609)
+  - Previous days (view mode): `pb-8` (32px) spacing in [HistoryView.tsx:322](src/components/HistoryView.tsx#L322)
+  - Previous days (edit mode): `pb-8` (32px) spacing in [HistoryView.tsx:384](src/components/HistoryView.tsx#L384)
 
 ### Subsections (Personal/Work)
 - Users can optionally categorize items into "Personal" or "Work" sections

@@ -606,7 +606,7 @@ export function AccountabilityApp() {
                   </Card>
                 </motion.div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-3 pb-4">
                   <AnimatePresence mode="popLayout">
                     {items.map((item, index) => (
                       <motion.div
