@@ -36,7 +36,10 @@ A mobile-first React application for tracking daily tasks and weekly goals with 
   - Completed days: only yellow/red items carried over
 - **Weekly**: Similar logic for weekly goal carryover
 
-### 📋 Historical Editing
+### 📋 History & Editing
+- **Month-by-month browsing** of past days with efficient loading
+- Navigate between months with previous/next buttons
+- Smart navigation boundaries (can't browse empty months or future)
 - View and edit any past day's task list
 - Mark emoji status for completed days
 - Live updates - changes save automatically

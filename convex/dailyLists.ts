@@ -128,6 +128,44 @@ export const getAllLists = query({
   },
 });
 
+// Get lists for a specific month (YYYY-MM format) - more efficient than getAllLists
+export const getListsByMonth = query({
+  args: { userId: v.string(), yearMonth: v.string() },
+  handler: async (ctx, args) => {
+    // Get all lists for user and filter by month prefix
+    const lists = await ctx.db
+      .query("dailyLists")
+      .withIndex("by_user_and_date", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    // Filter to only include dates that start with the yearMonth prefix (e.g., "2026-03")
+    return lists
+      .filter((list) => list.date.startsWith(args.yearMonth))
+      .sort((a, b) => b.date.localeCompare(a.date)); // Most recent first
+  },
+});
+
+// Get all months that have entries for a user (returns array of "YYYY-MM" strings)
+export const getAvailableMonths = query({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    const lists = await ctx.db
+      .query("dailyLists")
+      .withIndex("by_user_and_date", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    // Extract unique year-month combinations
+    const monthsSet = new Set<string>();
+    lists.forEach((list) => {
+      const yearMonth = list.date.substring(0, 7); // Get "YYYY-MM" from "YYYY-MM-DD"
+      monthsSet.add(yearMonth);
+    });
+
+    // Convert to array and sort descending (most recent first)
+    return Array.from(monthsSet).sort((a, b) => b.localeCompare(a));
+  },
+});
+
 // Create or update today's list
 export const upsertTodaysList = mutation({
   args: {

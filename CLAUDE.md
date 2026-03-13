@@ -48,6 +48,8 @@ npm run preview      # Preview production build
   - `getTodaysList` - Fetches today's list for a specific user (requires userId and date)
   - `getListByDate` - Fetches a specific date's list for a user
   - `getAllLists` - Fetches all historical lists for a user
+  - `getListsByMonth` - **Efficient month-specific query** - Fetches lists for a specific month (requires userId and yearMonth in "YYYY-MM" format). More efficient than getAllLists for history browsing.
+  - `getAvailableMonths` - Returns array of months that have entries for a user (["YYYY-MM"] format, sorted descending). Used for smart navigation boundaries.
   - `initializeTodaysList` - Creates new day with auto-carryover from previous day (carries over non-green items). **Automatically marks previous draft days as completed with all unrated items marked as red**
   - `upsertTodaysList` - Creates or updates today's list for a user (includes userId, date, and section field)
   - `markTodaysListCompleted` - Marks today's list as completed for a user
@@ -69,7 +71,7 @@ npm run preview      # Preview production build
 ### Frontend: React + TypeScript + Vite
 - **Main Components**:
   - [src/components/AccountabilityApp.tsx](src/components/AccountabilityApp.tsx) - Main application interface for managing today's list, handles user selection *(weekly button and reminder banner temporarily hidden via comments)*
-  - [src/components/HistoryView.tsx](src/components/HistoryView.tsx) - View for browsing past days' lists (filtered by user)
+  - [src/components/HistoryView.tsx](src/components/HistoryView.tsx) - **Month-based history browser** for past days' lists with efficient data loading. Shows one month at a time with navigation controls and loading skeletons. Uses `getListsByMonth` and `getAvailableMonths` queries.
   - [src/components/WeeklyGoalsApp.tsx](src/components/WeeklyGoalsApp.tsx) - Weekly goals interface with simplified list (no sections) *(currently inaccessible from UI)*
   - [src/components/WeeklyHistoryView.tsx](src/components/WeeklyHistoryView.tsx) - View for browsing past weeks' goals (last 12 weeks) *(currently inaccessible from UI)*
   - [src/components/UserPicker.tsx](src/components/UserPicker.tsx) - Full-screen user selection interface with avatar cards
@@ -108,7 +110,13 @@ npm run preview      # Preview production build
 6. User can revert completed day back to "draft" to make changes
 7. User can copy formatted list to clipboard for WhatsApp sharing
    - WhatsApp formatting groups items by section with headers
-8. **Historical Editing**: Users can view and mark emoji status for any past day in HistoryView
+8. **History Browsing**: View past days organized by month in HistoryView
+   - **Month Navigation**: Forward/backward buttons to browse months chronologically
+   - **Smart Boundaries**: Navigation buttons disabled at oldest month (with entries) and current month
+   - **Efficient Loading**: Only loads one month's data at a time via `getListsByMonth` query
+   - **Loading States**: Skeleton cards appear while fetching month data
+   - **Available Months**: Uses `getAvailableMonths` query to determine which months have entries
+9. **Historical Editing**: Users can view and mark emoji status for any past day in HistoryView
    - Click "Edit" button in header to enter edit mode
    - For completed days: change emoji status (🟢🟡🔴) and add explanations (saved live)
    - For draft days: "Mark Day Completed" transitions to emoji marking mode
@@ -233,8 +241,10 @@ npm run preview      # Preview production build
 - **Responsive Scrolling**: Content area uses flexbox with `min-h-0` to maintain proper scrolling within viewport height
 - **List Spacing**: Bottom padding added to prevent items from crowding the footer/bottom edge
   - Today's list: `pb-4` (16px) spacing in [AccountabilityApp.tsx:609](src/components/AccountabilityApp.tsx#L609)
-  - Previous days (view mode): `pb-8` (32px) spacing in [HistoryView.tsx:322](src/components/HistoryView.tsx#L322)
-  - Previous days (edit mode): `pb-8` (32px) spacing in [HistoryView.tsx:384](src/components/HistoryView.tsx#L384)
+  - Previous days (view mode): `pb-8` (32px) spacing in HistoryView
+  - Previous days (edit mode): `pb-8` (32px) spacing in HistoryView
+- **Loading States**: Skeleton UI patterns for smooth data fetching experience
+  - History month view: 3 skeleton cards with pulse animation while loading ([HistoryView.tsx:291-298](src/components/HistoryView.tsx#L291-L298))
 
 ### Subsections (Personal/Work)
 - Users can optionally categorize items into "Personal" or "Work" sections
@@ -276,6 +286,24 @@ npm run preview      # Preview production build
 - Marked items persist through "Mark Day Completed" action
 - Provides quick completion without full day review
 
+### History View & Month Navigation
+- **Month-by-Month Browsing**: History organized by calendar month for clean, efficient navigation
+- **Month Navigation Controls**:
+  - Previous/Next month buttons with chevron icons
+  - Current month displayed in center (e.g., "March 2026")
+  - **Smart boundaries**: Buttons automatically disable when at limits
+    - Previous button: disabled at oldest month with entries
+    - Next button: disabled at current month (can't browse future)
+- **Efficient Data Loading**:
+  - Uses `getListsByMonth(userId, yearMonth)` to fetch only current month's data
+  - Uses `getAvailableMonths(userId)` to determine navigation boundaries
+  - Avoids loading entire history - only fetches what's needed
+- **Loading Experience**:
+  - Shows 3 skeleton cards with pulse animation while fetching
+  - Smooth transition to actual data when loaded
+  - "No entries this month" message for empty months
+- **Day Selection**: Click any day card to view/edit details in right panel (desktop) or full screen (mobile)
+
 ### Historical Day Editing
 - **Simplified editing** for any past day via HistoryView
 - **Edit/View toggle** button appears next to the status badge in the header
@@ -315,11 +343,16 @@ npm run preview      # Preview production build
 
 ### Animation System
 - Built with **Framer Motion** library for smooth, performant transitions
-- **List Item Animations**:
+- **List Item Animations** (Today's list):
   - Staggered entrance animations (items appear sequentially with slight delay)
   - Fade + slide transitions for smooth visual feedback (opacity and y-axis)
   - **No zoom/scale animations** - removed to prevent jarring visual effects
   - **No layout prop** on list items - prevents automatic layout animations that cause unwanted scaling
+  - See [AccountabilityApp.tsx:595-606](src/components/AccountabilityApp.tsx#L595-L606) for configuration
+- **History View**:
+  - **No stagger animations** - removed for instant display of history items
+  - Loading skeleton uses CSS `animate-pulse` for subtle breathing effect
+  - Smooth transitions between months via React state changes
 - **Mode Transitions**:
   - Animated transitions between view/edit modes in HistoryView
   - Slide animations when switching between draft and completed states
@@ -331,14 +364,22 @@ npm run preview      # Preview production build
   - Button hover effects and state changes
   - Card elevation transitions on hover
 - **AnimatePresence**: Used for exit animations when items are removed from the DOM
-- See [AccountabilityApp.tsx:595-606](src/components/AccountabilityApp.tsx#L595-L606) for list animation configuration
 
 ### Performance Optimizations
+- **Month-Based Data Fetching**: History view loads only one month at a time instead of all historical data
+  - Uses `getListsByMonth` query with yearMonth parameter (e.g., "2026-03")
+  - Significantly reduces data transfer and rendering cost as history grows
+  - Month changes trigger new focused queries rather than filtering client-side
+- **Available Months Cache**: Single `getAvailableMonths` query provides navigation metadata
+  - Returns lightweight array of month strings (["2026-03", "2026-02", ...])
+  - Used to determine navigation boundaries without loading all data
+  - Enables smart disable states on navigation buttons
 - **Data Preloading**: Weekly goals data is preloaded in AccountabilityApp for smooth transitions when navigating to weekly view
 - **Lazy Initialization**: Both daily lists and weekly goals are initialized on first access via mutations (queries remain read-only)
 - **Compound Indexing**: Convex database uses compound indexes for efficient queries (userId + date, userId + weekStart)
 - **Client-Side Date Calculation**: Dates calculated on client and passed as parameters to reduce server-side computation
 - **Conditional Queries**: Queries skip execution when userId is not available (`userId ? { userId } : "skip"`)
+- **Loading Skeletons**: Skeleton UI prevents layout shift and provides immediate visual feedback during data fetching
 
 ## Important Notes
 
@@ -350,8 +391,13 @@ npm run preview      # Preview production build
 - **Date Handling**: Dates are calculated client-side and passed to Convex functions as parameters
   - Client uses `getLocalDateString()` helper to ensure consistent YYYY-MM-DD formatting
   - Most daily list functions require both `userId` and `date` parameters
+  - Month-based queries use "YYYY-MM" format (e.g., `getListsByMonth` takes `yearMonth: "2026-03"`)
 - Week calculations use ISO 8601 standard: Monday as week start, Sunday as end
 - Both daily lists and weekly goals are initialized lazily via mutations (queries are read-only)
+- **History Queries**:
+  - `getAllLists` - Fetches all history (used in main app, less efficient for large datasets)
+  - `getListsByMonth` - Fetches single month (preferred for history browsing, scales better)
+  - `getAvailableMonths` - Returns metadata about which months exist (lightweight, enables smart navigation)
 
 ### User & State Management
 - User selection is stored in localStorage with key "userId" (values: "abraham", "carlo", "stefania")

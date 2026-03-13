@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
   IconChevronLeft,
+  IconChevronRight,
   IconCopy,
   IconPencil,
   IconCheck,
@@ -37,20 +38,39 @@ function getLocalDateString() {
   return `${year}-${month}-${day}`;
 }
 
+// Month utilities
+function getMonthKey(year: number, month: number): string {
+  return `${year}-${String(month + 1).padStart(2, "0")}`;
+}
+
+function formatMonthLabel(year: number, month: number): string {
+  const date = new Date(year, month, 1);
+  return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
+
 export function HistoryView({ userId, onBack }: HistoryViewProps) {
-  const allLists = useQuery(api.dailyLists.getAllLists, { userId });
-  const markCompleted = useMutation(api.dailyLists.markTodaysListCompleted);
-  const updateEmojis = useMutation(api.dailyLists.updateItemsWithEmojis);
+  // Initialize to current month
+  const now = new Date();
+  const [currentYear, setCurrentYear] = React.useState(now.getFullYear());
+  const [currentMonth, setCurrentMonth] = React.useState(now.getMonth()); // 0-11
 
   const [selectedDate, setSelectedDate] = React.useState<string | null>(null);
   const [copied, setCopied] = React.useState(false);
   const [editMode, setEditMode] = React.useState(false);
   const [editingItems, setEditingItems] = React.useState<ListItem[]>([]);
 
+  // Efficient queries: only fetch current month's data and available months
+  const yearMonth = getMonthKey(currentYear, currentMonth);
+  const monthLists = useQuery(api.dailyLists.getListsByMonth, { userId, yearMonth });
+  const availableMonths = useQuery(api.dailyLists.getAvailableMonths, { userId });
+
+  const markCompleted = useMutation(api.dailyLists.markTodaysListCompleted);
+  const updateEmojis = useMutation(api.dailyLists.updateItemsWithEmojis);
+
   const selectedList = React.useMemo(() => {
-    if (!selectedDate || !allLists) return null;
-    return allLists.find((list) => list.date === selectedDate);
-  }, [selectedDate, allLists]);
+    if (!selectedDate || !monthLists) return null;
+    return monthLists.find((list) => list.date === selectedDate);
+  }, [selectedDate, monthLists]);
 
   // Load items when entering edit mode or changing selection
   React.useEffect(() => {
@@ -194,9 +214,51 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
     });
   };
 
-  // Filter out today's date from history
+  // Filter out today's date from the current month's lists
   const today = getLocalDateString();
-  const historyLists = allLists?.filter((list) => list.date !== today) || [];
+  const filteredMonthLists = React.useMemo(() => {
+    return (monthLists || []).filter((list) => list.date !== today);
+  }, [monthLists, today]);
+
+  // Calculate which months can be navigated to
+  const canGoPrevious = React.useMemo(() => {
+    if (!availableMonths || availableMonths.length === 0) return false;
+
+    const currentYearMonth = getMonthKey(currentYear, currentMonth);
+    const oldestMonth = availableMonths[availableMonths.length - 1];
+
+    return currentYearMonth > oldestMonth;
+  }, [availableMonths, currentYear, currentMonth]);
+
+  const canGoNext = React.useMemo(() => {
+    const now = new Date();
+    const isCurrentMonth = currentYear === now.getFullYear() && currentMonth === now.getMonth();
+
+    // Can't go beyond current month
+    return !isCurrentMonth;
+  }, [currentYear, currentMonth]);
+
+  const goToPreviousMonth = () => {
+    if (!canGoPrevious) return;
+
+    if (currentMonth === 0) {
+      setCurrentMonth(11);
+      setCurrentYear(currentYear - 1);
+    } else {
+      setCurrentMonth(currentMonth - 1);
+    }
+  };
+
+  const goToNextMonth = () => {
+    if (!canGoNext) return;
+
+    if (currentMonth === 11) {
+      setCurrentMonth(0);
+      setCurrentYear(currentYear + 1);
+    } else {
+      setCurrentMonth(currentMonth + 1);
+    }
+  };
 
   return (
     <div className="app-shell">
@@ -213,32 +275,58 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
         <div className="flex-1 overflow-y-auto min-h-0">
           {/* Mobile: Show either list or detail. Desktop: Show both side-by-side */}
           <div className="h-full md:grid md:grid-cols-2 md:divide-x md:divide-border/65">
-            {/* List of dates */}
+            {/* List of days in current month */}
             <div className={`${selectedDate ? "hidden md:block" : "block"} h-full overflow-y-auto`}>
               <div className="p-4 sm:p-5">
                 <div className="mb-4">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">History</p>
                   <h2 className="mt-1 text-lg font-semibold tracking-tight">Previous Days</h2>
-                  <p className="text-sm text-muted-foreground mt-0.5">Select a date to view details</p>
+
+                  {/* Month navigation */}
+                  <div className="flex items-center justify-between mt-4 gap-2">
+                    <Button
+                      onClick={goToPreviousMonth}
+                      variant="outline"
+                      size="sm"
+                      className="h-9 rounded-xl px-3"
+                      disabled={!canGoPrevious}
+                    >
+                      <IconChevronLeft className="h-4 w-4" />
+                    </Button>
+
+                    <h3 className="text-base font-semibold">{formatMonthLabel(currentYear, currentMonth)}</h3>
+
+                    <Button
+                      onClick={goToNextMonth}
+                      variant="outline"
+                      size="sm"
+                      className="h-9 rounded-xl px-3"
+                      disabled={!canGoNext}
+                    >
+                      <IconChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
 
-                {historyLists.length === 0 ? (
+                {monthLists === undefined ? (
                   <div className="flex items-center justify-center py-12">
-                    <p className="text-center text-muted-foreground text-sm">No history yet</p>
+                    <div className="space-y-3 w-full">
+                      <div className="h-[72px] rounded-2xl bg-muted/50 animate-pulse" />
+                      <div className="h-[72px] rounded-2xl bg-muted/50 animate-pulse" />
+                      <div className="h-[72px] rounded-2xl bg-muted/50 animate-pulse" />
+                    </div>
+                  </div>
+                ) : filteredMonthLists.length === 0 ? (
+                  <div className="flex items-center justify-center py-12">
+                    <p className="text-center text-muted-foreground text-sm">No entries this month</p>
                   </div>
                 ) : (
                   <div className="space-y-2.5">
-                    <AnimatePresence mode="popLayout">
-                      {historyLists.map((list, index) => (
-                        <motion.button
-                          key={list._id}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: 20 }}
-                          transition={{ duration: 0.2, delay: index * 0.05 }}
-                          layout
-                          onClick={() => setSelectedDate(list.date)}
-                          className={`elevated-card w-full text-left flex items-center justify-between rounded-2xl p-4 transition-all ${
+                    {filteredMonthLists.map((list) => (
+                      <button
+                        key={list._id}
+                        onClick={() => setSelectedDate(list.date)}
+                        className={`elevated-card w-full text-left flex items-center justify-between rounded-2xl p-4 transition-all ${
                           selectedDate === list.date
                             ? "border-primary/55 bg-primary/10"
                             : "hover:-translate-y-0.5 hover:border-primary/35"
@@ -249,11 +337,10 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
                           variant={list.status === "completed" ? "default" : "secondary"}
                           className={selectedDate === list.date ? "bg-primary text-primary-foreground" : ""}
                         >
-                            {list.items.length}
-                          </Badge>
-                        </motion.button>
-                      ))}
-                    </AnimatePresence>
+                          {list.items.length}
+                        </Badge>
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
@@ -388,7 +475,7 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
                             className={`task-card rounded-md transition-colors ${
                               isCompleted
                                 ? item.emoji
-                                  ? "border-foreground/35 bg-foreground/[0.11]"
+                                  ? "border-foreground/35 bg-foreground/11"
                                   : "border-border/70 bg-background"
                                 : ""
                             }`}
