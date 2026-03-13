@@ -406,7 +406,7 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
                         transition={{ duration: 0.2 }}
                       >
                         {/* View Mode */}
-                        <div className="space-y-2.5 pb-8">
+                        <div className="space-y-3.5 pb-8">
                           <AnimatePresence mode="popLayout">
                             {selectedList.items.map((item, index) => (
                               <motion.div
@@ -417,17 +417,17 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
                                 layout
                               >
                                 <Card className="task-card">
-                            <CardContent className="px-3.5 py-3 sm:px-4 sm:py-3">
+                            <CardContent className="px-3 py-2.5 sm:px-3.5 sm:py-2.5">
                               <div className="task-row">
                                 <div className="flex-1 min-w-0">
                                   <p className="task-text">{item.text}</p>
                                   {item.section && (
                                     <Badge
-                                      variant="outline"
-                                      className={`mt-1.5 h-5 px-2.5 text-[10px] font-bold uppercase border-0 ${
+                                      variant="secondary"
+                                      className={`mt-2 h-6 px-2.5 text-[10px] font-semibold uppercase ${
                                         item.section === "personal"
-                                          ? "bg-pink-500/90 text-white"
-                                          : "bg-blue-600/90 text-white"
+                                          ? "border-blue-300 bg-blue-50/80 text-blue-700"
+                                          : "border-violet-300 bg-violet-50/80 text-violet-700"
                                       }`}
                                     >
                                       {item.section}
@@ -468,11 +468,11 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
                     transition={{ duration: 0.2 }}
                   >
                     {/* Edit Mode */}
-                    <div className="space-y-2.5 pb-8">
+                    <div className="space-y-3 pb-8">
                         {editingItems.map((item, index) => (
                           <Card
                             key={index}
-                            className={`task-card transition-colors ${
+                            className={`task-card rounded-md transition-colors ${
                               isCompleted
                                 ? item.emoji
                                   ? "border-foreground/35 bg-foreground/11"
@@ -480,17 +480,17 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
                                 : ""
                             }`}
                           >
-                            <CardContent className="px-3.5 py-3 sm:px-4 sm:py-3">
+                            <CardContent className="px-3.5 py-3 sm:px-4 sm:py-3.5">
                               <div className="task-row">
                                 <div className="flex-1 min-w-0">
                                   <p className="task-text">{item.text}</p>
                                   {item.section && (
                                     <Badge
-                                      variant="outline"
-                                      className={`mt-1.5 h-5 px-2.5 text-[10px] font-bold uppercase border-0 ${
+                                      variant="secondary"
+                                      className={`mt-2 h-6 px-2.5 text-[10px] font-semibold uppercase ${
                                         item.section === "personal"
-                                          ? "bg-pink-500/90 text-white"
-                                          : "bg-blue-600/90 text-white"
+                                          ? "border-blue-300 bg-blue-50/80 text-blue-700"
+                                          : "border-violet-300 bg-violet-50/80 text-violet-700"
                                       }`}
                                     >
                                       {item.section}
