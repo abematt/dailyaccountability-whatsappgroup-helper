@@ -46,11 +46,12 @@ npm run preview      # Preview production build
   - `getTodaysList` - Fetches today's list for a specific user (requires userId and date)
   - `getListByDate` - Fetches a specific date's list for a user
   - `getAllLists` - Fetches all historical lists for a user
-  - `initializeTodaysList` - Creates new day with auto-carryover from previous day (carries over non-green items)
+  - `initializeTodaysList` - Creates new day with auto-carryover from previous day (carries over non-green items). **Automatically marks previous draft days as completed with all unrated items marked as red**
   - `upsertTodaysList` - Creates or updates today's list for a user (includes userId, date, and section field)
   - `markTodaysListCompleted` - Marks today's list as completed for a user
   - `revertTodaysListToDraft` - Reverts a completed day back to draft mode for a user
   - `updateItemsWithEmojis` - Updates emoji assignments for items for a user
+  - `migrateDraftDaysToCompleted` - Admin/migration function to mark all previous draft days as completed for all users
 - **Weekly Goals Functions**: [convex/weeklyGoals.ts](convex/weeklyGoals.ts) - Contains queries and mutations for weekly goals:
   - `getCurrentWeekGoals` - Fetches current week's goals for a user
   - `initializeCurrentWeek` - Creates new week with auto-carryover from previous week
@@ -82,10 +83,13 @@ npm run preview      # Preview production build
    - Small avatar badge appears in top-right corner showing current user
 2. **Auto-Carryover**: When accessing a new day, the system automatically:
    - Creates new day entry via `initializeTodaysList` mutation
-   - **Auto-marks previous draft days**: If previous day status is "draft" (never completed), all items are automatically marked as red (incomplete)
+   - **Auto-marks and completes previous draft days**: If previous day status is "draft" (never completed), the system automatically:
+     - Marks all unrated items as red (incomplete)
+     - Changes the day's status from "draft" to "completed"
+     - This ensures previous days are never left in "draft"/"in progress" state
    - Checks previous day's status and carries over incomplete items:
      - If previous day was **completed**: only items marked yellow/red are carried over
-     - If previous day was **draft** (never marked): ALL items are carried over (after auto-marking as red)
+     - If previous day was **draft** (auto-completed as described above): ALL items are carried over
      - Items marked green (complete) are NOT carried over
      - Carried items have their emoji status reset to null (unrated)
    - Empty previous day: starts with empty list
@@ -265,21 +269,25 @@ npm run preview      # Preview production build
   - Click "Edit" (pencil icon) to enter edit mode
   - Click "View" (X icon) to exit edit mode - button turns amber when in edit mode
   - Visual feedback: button color changes to amber when editing is active
-- **Edit mode functionality (read-only items, live emoji marking)**:
+- **Edit mode functionality (read-only items, emoji marking with auto-save)**:
   - **For completed days**: Assign or change emoji status (🟢🟡🔴) with optional explanations for yellow items
   - **For draft days**: "Mark Day Completed" button transitions day to completed status and shows emoji marking UI
-  - **Revert to Draft**: Available for completed days via "Back to Goals" button
+  - **No revert to draft**: Previous days cannot be reverted back to draft status - once completed, they stay completed
   - **No add/edit/delete**: Cannot add new items, edit item text, or delete items
   - **No section changes**: Sections display as static badges, not editable
-  - **Live updates**: All emoji changes and explanations save immediately to database (no save button)
+  - **Save behavior**:
+    - Emoji changes save immediately to database when clicked
+    - Explanation text updates local state while typing, saves to database on blur (when you click away from the textarea)
+    - This prevents re-rendering bugs that would interrupt fast typing
 - "Copy for WhatsApp" button available in both view and edit modes
 - No time restrictions - edit any historical day
 
 ### Revert to Draft
-- Completed days/weeks can be reverted back to draft mode
-- "Revert to Draft" button appears in footer when day/week is completed
+- **Today's list only**: Only the current day can be reverted back to draft mode
+- "Back to Goals" button appears in footer when today's list is completed
 - Allows making changes to items after initial completion
-- Can re-complete the day/week after making changes
+- Can re-complete the day after making changes
+- **Previous days cannot be reverted**: Historical days remain in completed status to maintain accountability
 
 ### WhatsApp Formatting
 - **Title Format**:
@@ -333,6 +341,7 @@ npm run preview      # Preview production build
 ### User & State Management
 - User selection is stored in localStorage with key "userId" (values: "abraham", "carlo", "stefania")
 - Both daily and weekly systems use dual-mode UI: "draft" (planning/editing) and "completed" (reviewing/rating)
+- **Previous days are always completed**: There is no concept of "in progress" for past days. When moving to a new day, any previous draft day is automatically marked as completed with all unrated items marked as red
 - 7-day reminder threshold triggers when `lastUpdated` timestamp is 7+ days old
 
 ### WhatsApp Export

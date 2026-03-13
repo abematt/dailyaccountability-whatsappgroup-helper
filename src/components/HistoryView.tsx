@@ -40,7 +40,6 @@ function getLocalDateString() {
 export function HistoryView({ userId, onBack }: HistoryViewProps) {
   const allLists = useQuery(api.dailyLists.getAllLists, { userId });
   const markCompleted = useMutation(api.dailyLists.markTodaysListCompleted);
-  const revertToDraft = useMutation(api.dailyLists.revertTodaysListToDraft);
   const updateEmojis = useMutation(api.dailyLists.updateItemsWithEmojis);
 
   const [selectedDate, setSelectedDate] = React.useState<string | null>(null);
@@ -169,23 +168,20 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
   };
 
   const handleExplanationChange = (index: number, explanation: string) => {
-    if (!selectedDate) return;
     const newItems = [...editingItems];
     newItems[index] = { ...newItems[index], explanation };
     setEditingItems(newItems);
-    // Save live to database
-    updateEmojis({ userId, date: selectedDate, items: newItems });
+  };
+
+  const handleSaveExplanation = () => {
+    if (!selectedDate) return;
+    updateEmojis({ userId, date: selectedDate, items: editingItems });
   };
 
   const handleMarkCompleted = async () => {
     if (!selectedDate) return;
     await markCompleted({ userId, date: selectedDate });
     // Stay in edit mode to allow emoji marking
-  };
-
-  const handleRevertToDraft = async () => {
-    if (!selectedDate) return;
-    await revertToDraft({ userId, date: selectedDate });
   };
 
   const formatDate = (dateString: string) => {
@@ -445,6 +441,7 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
                                           placeholder="Add explanation (optional)..."
                                           value={item.explanation || ""}
                                           onChange={(e) => handleExplanationChange(index, e.target.value)}
+                                          onBlur={handleSaveExplanation}
                                           className="mt-3 min-h-20 rounded-2xl border-border/75 bg-background/70 text-sm resize-none"
                                         />
                                       )}
@@ -466,18 +463,6 @@ export function HistoryView({ userId, onBack }: HistoryViewProps) {
                           >
                             <IconCheck className="mr-2 h-5 w-5" />
                             Mark Day Completed
-                          </Button>
-                        )}
-
-                        {isCompleted && (
-                          <Button
-                            onClick={handleRevertToDraft}
-                            variant="secondary"
-                            className="h-12 w-full rounded-2xl border border-amber-300/70 bg-amber-100/70 text-amber-900 hover:bg-amber-200/70 text-base"
-                            size="lg"
-                          >
-                            <IconX className="mr-2 h-5 w-5" />
-                            Back to Goals
                           </Button>
                         )}
 
